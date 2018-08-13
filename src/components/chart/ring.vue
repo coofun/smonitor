@@ -3,122 +3,124 @@
 </template>
 
 <script>
+const placeholder = {
+  value: 4,
+  itemStyle: {
+    normal: {
+      label: {
+        show: false
+      },
+      labelLine: {
+        show: false
+      },
+      color: 'rgba(0,0,0,0)',
+      borderWidth: 0,
+      borderColor: 'rgba(0, 0, 0, 0)'
+    }
+  }
+}
 export default {
   name: 'chart-ring',
-  methods: {
-    draw() {
-      let chartRing = this.$echarts.init(document.getElementById('chart_ring'))
-      var scaleData = [
+  data() {
+    return {
+      chart: null
+    }
+  },
+  props: { cityList: Array, currentCity: Object },
+  watch: {
+    currentCity: function(city) {
+      let data = []
+      // 放置数量
+      data.push(
         {
-          name: '工程建设',
-          value: 10
-        },
-        {
-          name: '产权交易',
-          value: 20
-        },
-        {
-          name: '土地交易',
-          value: 20
-        },
-        {
-          name: '其他交易',
-          value: 27
-        },
-        {
-          name: '政府采购',
-          value: 23
-        }
-      ]
-      var rich = {
-        white: {
-          color: '#ddd',
-          align: 'center',
-          padding: [5, 0]
-        }
-      }
-      var placeHolderStyle = {
-        normal: {
-          label: {
-            show: false
-          },
-          labelLine: {
-            show: false
-          },
-          color: 'rgba(0, 0, 0, 0)',
-          borderColor: 'rgba(0, 0, 0, 0)',
-          borderWidth: 0
-        }
-      }
-      var data = []
-      for (var i = 0; i < scaleData.length; i++) {
-        data.push(
-          {
-            value: scaleData[i].value,
-            name: scaleData[i].name,
-            itemStyle: {
-              normal: {
-                borderWidth: 5,
-                shadowBlur: 30,
-                borderColor: new this.$echarts.graphic.LinearGradient(0, 0, 1, 1, [
-                  {
-                    offset: 0,
-                    color: '#7777eb'
-                  },
-                  {
-                    offset: 1,
-                    color: '#70ffac'
-                  }
-                ]),
-                shadowColor: 'rgba(142, 152, 241, 0.6)'
-              }
-            }
-          },
-          {
-            value: 4,
-            name: '',
-            itemStyle: placeHolderStyle
-          }
-        )
-      }
-      var seriesObj = [
-        {
-          name: '',
-          type: 'pie',
-          clockWise: false,
-          radius: [195, 200],
-          hoverAnimation: false,
+          name:
+            (
+              Math.round(this.currentCity.shunt * 100) / this.currentCity.total
+            ).toFixed(2) + '%',
+          value: this.currentCity.shunt,
           itemStyle: {
             normal: {
-              label: {
-                show: true,
-                position: 'outside',
-                color: '#ddd',
-                formatter: function(params) {
-                  var percent = 0
-                  var total = 0
-                  for (var i = 0; i < scaleData.length; i++) {
-                    total += scaleData[i].value
-                  }
-                  percent = (params.value / total * 100).toFixed(0)
-                  if (params.name !== '') {
-                    return params.name + '\n{white|' + '占比' + percent + '%}'
-                  } else {
-                    return ''
-                  }
-                },
-                rich: rich
-              },
-              labelLine: {
-                show: false
-              }
+              borderWidth: 5,
+              borderColor: '#D6B469'
             }
-          },
-          data: data
-        }
-      ]
-      let option = {
-        backgroundColor: '#04243E',
+          }
+        },
+        placeholder
+      )
+      // 报警数量
+      data.push(
+        {
+          name:
+            (
+              Math.round(this.currentCity.alarm * 100) / this.currentCity.total
+            ).toFixed(2) + '%',
+          value: this.currentCity.alarm,
+          itemStyle: {
+            normal: {
+              borderWidth: 5,
+              borderColor: '#D6B469'
+            }
+          }
+        },
+        placeholder
+      )
+      // 充电数量
+      data.push(
+        {
+          name:
+            (
+              Math.round(this.currentCity.charging * 100) /
+              this.currentCity.total
+            ).toFixed(2) + '%',
+          value: this.currentCity.charging,
+          itemStyle: {
+            normal: {
+              borderWidth: 5,
+              borderColor: '#D6B469'
+            }
+          }
+        },
+        placeholder
+      )
+      // 放电数量
+      data.push(
+        {
+          name:
+            (
+              Math.round(this.currentCity.discharge * 100) /
+              this.currentCity.total
+            ).toFixed(2) + '%',
+          value: this.currentCity.discharge,
+          itemStyle: {
+            normal: {
+              borderWidth: 5,
+              borderColor: '#D6B469'
+            }
+          }
+        },
+        placeholder
+      )
+      // 未知状态数量
+      data.push(
+        {
+          name:
+            (
+              Math.round(this.currentCity.unknown * 100) /
+              this.currentCity.total
+            ).toFixed(2) + '%',
+          value: this.currentCity.unknown,
+          itemStyle: {
+            normal: {
+              borderWidth: 5,
+              borderColor: '#D6B469'
+            }
+          }
+        },
+        placeholder
+      )
+
+      this.chart.setOption({
+        backgroundColor: 'transparent',
         tooltip: {
           show: false
         },
@@ -128,16 +130,37 @@ export default {
         toolbox: {
           show: false
         },
-        series: seriesObj
-      }
-      chartRing.setOption(option)
+        series: [
+          {
+            type: 'pie',
+            radius: [95, 100],
+            hoverAnimation: false,
+            itemStyle: {
+              normal: {
+                label: {
+                  show: true,
+                  position: 'outside',
+                  color: '#FFFFFF'
+                },
+                labelLine: {
+                  show: false
+                }
+              }
+            },
+            data: data
+          }
+        ]
+      })
     }
   },
   mounted() {
-    this.draw()
+    this.chart = this.$echarts.init(document.getElementById('chart_ring'))
   }
 }
 </script>
 
 <style scoped>
+#chart_ring {
+  min-height: 240px;
+}
 </style>

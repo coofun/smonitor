@@ -1,10 +1,16 @@
 import request from '@/utils/request'
 
-const service = '/cwld/smartBatteryAction/getBatteryDataByParams.action'
-
 export function getBatteryData() {
   return request({
-    url: service,
+    url: '/cwld/smartBatteryAction/getBatteryDataByParams.action',
     method: 'post'
+  })
+}
+
+export function getBatteryAlarmNum(query) {
+  return request({
+    url: '/cwld/smartBatteryAction/getBatteryAlarmNumByParams.action',
+    method: 'post',
+    params: query
   })
 }

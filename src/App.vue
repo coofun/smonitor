@@ -28,25 +28,15 @@
         <div class="map_weizhi"><img src="@/assets/images/map_01.png"></div>
       </div>
       <div class="tongji">
-        <!--
-        <div class="tongji_pic"><img src="@/assets/images/Group 26.png"></div>
-        -->
-        <chart-ring></chart-ring>
+        <chart-ring :city-list="cityList" :current-city="currentCity"></chart-ring>
         <div class="tongji_tit">电池状态统计</div>
-        <div class="tongji_pic"><img src="@/assets/images/Group.png"></div>
+        <battery-amount-bar :city-list="cityList"></battery-amount-bar>
         <div class="tongji_tit">全国各省份电池数量统计</div>
-        <div class="tongji_pic"><img src="@/assets/images/x.png"></div>
+        <battery-alarm-line :current-city="currentCity"></battery-alarm-line>
         <div class="tongji_tit">电池报警数量</div>
       </div>
     </div>
-    <div class="right_menu">
-      <div class="right_menu_tit"></div>
-      <div class="diquliebiao">
-        <ul>
-          <li v-for="city in cityList" :key="city.city"><img src="@/assets/images/北京.png">{{city.city}}</li>
-        </ul>
-      </div>
-    </div>
+    <city-list :city-list="cityList" :current-city="currentCity" @select-city="selectCity"></city-list>
     <div class="baojing_list">
       <div class="line"></div>
       <div class="baojing_neirong">
@@ -64,21 +54,38 @@
 <script>
 import { getBatteryData } from '@/api/battery_data.js'
 import ChartRing from '@/components/chart/ring.vue'
+import BatteryAmountBar from '@/components/chart/battery-amount-bar.vue'
+import BatteryAlarmLine from '@/components/chart/battery-alarm-line.vue'
+import CityList from '@/components/city-list.vue'
 
 export default {
   name: 'App',
   components: {
-    ChartRing
+    ChartRing,
+    BatteryAmountBar,
+    BatteryAlarmLine,
+    CityList
   },
   data() {
     return {
-      cityList: []
+      cityList: [],
+      currentCity: null
+    }
+  },
+  methods: {
+    selectCity(city) {
+      this.currentCity = city
     }
   },
   mounted() {
     getBatteryData().then(response => {
-      this.cityList = response.data
+      if (response.data && response.data.length > 0) {
+        this.cityList = response.data
+        this.currentCity = response.data[0]
+      }
     })
+
+    this.$on('select-city')
   }
 }
 </script>
