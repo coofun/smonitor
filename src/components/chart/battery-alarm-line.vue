@@ -111,19 +111,18 @@ export default {
           endTime: fmt + endSuffix
         }
         this.xData.push(getChineseDay(day.getDay()))
-        this.yData.push(day.getDay() * 100)
+        let yData = this.yData
         getBatteryAlarmNum(query)
           .then(response => {
-            this.yData.push(response.data.total)
+            yData.push(response.data.total)
           })
           .catch(function(error) {
             console.log(error)
-            this.yData.push(day.getDay())
+            yData.push(day.getDay() * 100)
           })
       }
     },
     yData(data) {
-      console.log(this.yData)
       this.refreshChart()
     }
   },
