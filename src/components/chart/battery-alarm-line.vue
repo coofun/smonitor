@@ -3,31 +3,7 @@
 </template>
 
 <script>
-import { getBatteryAlarmNum } from '@/api/battery_data.js'
-
-const startSuffix = ' 00:00:01'
-const endSuffix = ' 24:00:00'
-
-function getChineseDay(day) {
-  switch (day) {
-    case 1:
-      return '周一'
-    case 2:
-      return '周二'
-    case 3:
-      return '周三'
-    case 4:
-      return '周四'
-    case 5:
-      return '周五'
-    case 6:
-      return '周六'
-    case 0:
-      return '周日'
-    default:
-      return '未知'
-  }
-}
+import { getBatteryAlarmNumByParams } from '@/api/battery_data.js'
 
 export default {
   name: 'battery-alarm-line',
@@ -40,15 +16,21 @@ export default {
     }
   },
   methods: {
-    refreshChart() {
+    iniChart() {
+      this.chart = this.$echarts.init(document.getElementById('chart_line'))
+    },
+    setChartOption() {
       this.chart.setOption({
         xAxis: {
           type: 'category',
           boundaryGap: false,
-          data: this.xData,
           axisTick: {
             show: false
-          }
+          },
+          axisLabel: {
+            rotate: 30
+          },
+          data: this.xData
         },
         yAxis: {
           type: 'value',
@@ -70,9 +52,8 @@ export default {
         },
         series: [
           {
-            data: this.yData,
             type: 'line',
-            showSymbol: false,
+            showSymbol: true,
             smooth: true,
             itemStyle: {
               normal: {
@@ -92,42 +73,40 @@ export default {
                   }
                 ])
               }
-            }
+            },
+            data: this.yData
           }
         ]
       })
+    },
+    getRecent7DaysData() {
+      let xData = (this.xData = [])
+      let yData = (this.yData = [])
+      let startTime = new Date().getSomeDay(-6).format('yyyy-MM-dd 00:00:00')
+      let endTime = new Date().format('yyyy-MM-dd 23:59:59')
+      getBatteryAlarmNumByParams(null, startTime, endTime)
+        .then(response => {
+          if (response.data) {
+            response.data.forEach(element => {
+              xData.push(element.dateTime)
+              yData.push(element.total)
+            })
+          }
+        })
+        .catch(function(error) {
+          console.log(error)
+        })
     }
   },
   watch: {
-    currentCity(city) {
-      this.xData = []
-      this.yData = []
-      for (let i = -7; i < 0; i++) {
-        let day = new Date().getSomeDay(i)
-        let fmt = day.format('yyyy-MM-dd')
-        let query = {
-          city: city.city,
-          startTime: fmt + startSuffix,
-          endTime: fmt + endSuffix
-        }
-        this.xData.push(getChineseDay(day.getDay()))
-        let yData = this.yData
-        getBatteryAlarmNum(query)
-          .then(response => {
-            yData.push(response.data.total)
-          })
-          .catch(function(error) {
-            console.log(error)
-            yData.push(day.getDay() * 100)
-          })
-      }
-    },
-    yData(data) {
-      this.refreshChart()
+    xData() {
+      this.setChartOption()
     }
   },
   mounted() {
-    this.chart = this.$echarts.init(document.getElementById('chart_line'))
+    this.iniChart()
+    this.getRecent7DaysData()
+    setInterval(this.getRecent7DaysData, 100000)
   }
 }
 </script>

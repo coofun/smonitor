@@ -196,7 +196,6 @@ export default {
       }
       this.map.setOption(option)
       var counts = option.series[0].data.length
-      var dataIndex = 0
       let chart = this.map
       let autoHoverTip = function() {
         for (var i = 0; i < counts; i++) {
@@ -213,7 +212,7 @@ export default {
       }
       setTimeout(function() {
         autoHoverTip()
-        setInterval(autoHoverTip, counts * 1000)
+        setInterval(autoHoverTip, 10000)
       }, 500)
     }
   }

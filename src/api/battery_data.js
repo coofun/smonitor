@@ -7,10 +7,27 @@ export function getBatteryData() {
   })
 }
 
-export function getBatteryAlarmNum(query) {
+export function getBatteryAlarmNumByParams(city, startTime, endTime) {
+  let params = {}
+
+  if (city) {
+    params.city = city
+  }
+
+  params.startTime = startTime
+  params.endTime = endTime
+
   return request({
     url: '/cwld/smartBatteryAction/getBatteryAlarmNumByParams.action',
     method: 'post',
-    params: query
+    params: params
+  })
+}
+
+export function getBatteryDataByCity(city) {
+  return request({
+    url: '/cwld/smartBatteryAction/getBatteryDataByCity.action',
+    method: 'post',
+    data: { city: city }
   })
 }

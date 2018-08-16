@@ -18,16 +18,6 @@
         </div>
     </div>
     <city-list :city-list="cityList" :current-city="currentCity" @select-city="selectCity"></city-list>
-    <div class="baojing_list">
-        <div class="line"></div>
-        <div class="baojing_neirong">
-            <ul>
-                <li><img src="@/assets/images/yuan.png">山东省 济南市 1234号 高温报警</li>
-                <li><img src="@/assets/images/yuan.png">山东省 济南市 1234号 高温报警</li>
-                <li><img src="@/assets/images/yuan.png">山东省 济南市 1234号 高温报警</li>
-            </ul>
-        </div>
-    </div>
     <router-view/>
 </div>
 </template>
