@@ -1,7 +1,6 @@
 <template>
   <div id="dashboard">
     <div class="neirong">
-        <tab-vertical></tab-vertical>
         <battery-china-map :cities="cities" :batteryData="batteryData"></battery-china-map>
         <div class="tongji">
             <chart-ring></chart-ring>
@@ -17,7 +16,6 @@
 </template>
 
 <script>
-import TabVertical from '@/components/tab-vertical.vue'
 import BatteryChinaMap from '@/components/battery-china-map.vue'
 import ChartRing from '@/components/chart/ring.vue'
 import BatteryAmountBar from '@/components/chart/battery-amount-bar.vue'
@@ -31,7 +29,6 @@ export default {
     batteryData: Array
   },
   components: {
-    TabVertical,
     BatteryChinaMap,
     ChartRing,
     BatteryAmountBar,
