@@ -1,10 +1,13 @@
 <template>
-    <div id="chart_ring" class="tongji_pic"></div>
+<div id="chart_ring" class="tongji_pic">
+</div>
 </template>
 
 <script>
+import { percentString } from '@/extends/math.js'
+import { getBatteryStatusByParams } from '@/api/battery_data.js'
 const placeholder = {
-  value: 4,
+  value: 20,
   itemStyle: {
     normal: {
       label: {
@@ -23,102 +26,36 @@ export default {
   name: 'chart-ring',
   data() {
     return {
-      chart: null
+      chart: null,
+      data: null,
+      itemStyle: {
+        normal: {
+          borderWidth: 5,
+          borderColor: '#D6B469'
+        }
+      }
     }
   },
-  props: { cityList: Array, currentCity: Object },
-  watch: {
-    currentCity: function(city) {
-      let data = []
-      // 放置数量
-      data.push(
-        {
-          name:
-            (
-              Math.round(this.currentCity.shunt * 100) / this.currentCity.total
-            ).toFixed(2) + '%',
-          value: this.currentCity.shunt,
-          itemStyle: {
-            normal: {
-              borderWidth: 5,
-              borderColor: '#D6B469'
-            }
-          }
-        },
-        placeholder
+  methods: {
+    initChart() {
+      this.chart = this.$echarts.init(document.getElementById('chart_ring'))
+      this.getBatteryStatusData()
+      setInterval(this.getBatteryStatusData, 600000)
+    },
+    getBatteryStatusData() {
+      getBatteryStatusByParams().then(response => {
+        if (response && response.data) {
+          this.data = response.data
+          this.setChartOption()
+        }
+      })
+    },
+    getFormattedStatusName(statusName, statusNum, totalNum) {
+      return (
+        statusName + ':' + statusNum + ':' + percentString(statusNum, totalNum)
       )
-      // 报警数量
-      data.push(
-        {
-          name:
-            (
-              Math.round(this.currentCity.alarm * 100) / this.currentCity.total
-            ).toFixed(2) + '%',
-          value: this.currentCity.alarm,
-          itemStyle: {
-            normal: {
-              borderWidth: 5,
-              borderColor: '#D6B469'
-            }
-          }
-        },
-        placeholder
-      )
-      // 充电数量
-      data.push(
-        {
-          name:
-            (
-              Math.round(this.currentCity.charging * 100) /
-              this.currentCity.total
-            ).toFixed(2) + '%',
-          value: this.currentCity.charging,
-          itemStyle: {
-            normal: {
-              borderWidth: 5,
-              borderColor: '#D6B469'
-            }
-          }
-        },
-        placeholder
-      )
-      // 放电数量
-      data.push(
-        {
-          name:
-            (
-              Math.round(this.currentCity.discharge * 100) /
-              this.currentCity.total
-            ).toFixed(2) + '%',
-          value: this.currentCity.discharge,
-          itemStyle: {
-            normal: {
-              borderWidth: 5,
-              borderColor: '#D6B469'
-            }
-          }
-        },
-        placeholder
-      )
-      // 未知状态数量
-      data.push(
-        {
-          name:
-            (
-              Math.round(this.currentCity.unknown * 100) /
-              this.currentCity.total
-            ).toFixed(2) + '%',
-          value: this.currentCity.unknown,
-          itemStyle: {
-            normal: {
-              borderWidth: 5,
-              borderColor: '#D6B469'
-            }
-          }
-        },
-        placeholder
-      )
-
+    },
+    setChartOption() {
       this.chart.setOption({
         backgroundColor: 'transparent',
         tooltip: {
@@ -147,14 +84,69 @@ export default {
                 }
               }
             },
-            data: data
+            data: this.dataFormatted
           }
         ]
       })
     }
   },
+  computed: {
+    dataFormatted() {
+      let data = []
+      data.push(
+        {
+          name: this.getFormattedStatusName(
+            '放置',
+            this.data.shunt,
+            this.data.total
+          ),
+          value: this.data.shunt,
+          itemStyle: this.itemStyle
+        },
+        placeholder
+      )
+      data.push(
+        {
+          name: this.getFormattedStatusName(
+            '充电',
+            this.data.charging,
+            this.data.total
+          ),
+          value: this.data.charging,
+          itemStyle: this.itemStyle
+        },
+        placeholder
+      )
+      data.push(
+        {
+          name: this.getFormattedStatusName(
+            '放电',
+            this.data.discharge,
+            this.data.total
+          ),
+          value: this.data.discharge,
+          itemStyle: this.itemStyle
+        },
+        placeholder
+      )
+      data.push(
+        {
+          name: this.getFormattedStatusName(
+            '未知',
+            this.data.unknown,
+            this.data.total
+          ),
+          value: this.data.unknown,
+          itemStyle: this.itemStyle
+        },
+        placeholder
+      )
+
+      return data
+    }
+  },
   mounted() {
-    this.chart = this.$echarts.init(document.getElementById('chart_ring'))
+    this.initChart()
   }
 }
 </script>

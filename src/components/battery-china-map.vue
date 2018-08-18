@@ -8,6 +8,8 @@
 import 'echarts/map/js/china.js'
 import 'echarts/map/js/china-contour.js'
 
+const geoCoordMap = require('../data/geoCoordMap.json')
+
 var data = [
   {
     name: '齐齐哈尔'
@@ -49,25 +51,10 @@ var data = [
     name: '重庆市'
   }
 ]
-var geoCoordMap = {
-  齐齐哈尔: [123.97, 47.33],
-  盐城: [120.13, 33.38],
-  青岛: [120.33, 36.07],
-  金昌: [102.188043, 38.520089],
-  泉州: [118.58, 24.93],
-  拉萨: [91.11, 29.97],
-  上海浦东: [121.48, 31.22],
-  攀枝花: [101.718637, 26.582347],
-  威海: [122.1, 37.5],
-  承德: [117.93, 40.97],
-  汕尾: [115.375279, 22.786211],
-  克拉玛依: [84.77, 45.59],
-  重庆市: [108.384366, 30.439702]
-}
 var convertData = function(data) {
   var res = []
   for (var i = 0; i < data.length; i++) {
-    var geoCoord = geoCoordMap[data[i].name]
+    var geoCoord = geoCoordMap[data[i].name] || geoCoordMap[data[i].name + '市']
     if (geoCoord) {
       res.push({
         name: data[i].name,
@@ -177,16 +164,14 @@ export default {
               extraCssText:
                 'background: url(static/map_popup_bg.png) no-repeat; width: 294px; height: 117px; padding: 0',
               formatter: function(params, ticket, callback) {
-                return `<div class="map_tan_tit">61704006257<br/>
-                          <span class="map_time">2018-06-15 15:12:32</span>
-                        </div>
+                return `<div class="map_tan_tit">济南市</div>
                         <div class="baojingjibie">一级报警</div>
                         <div class="dianchizhuangtai">放电</div>
                         <div class="canshu_01">
-                          <div class="map_tan_canshu">电量<br/>80%</div>
-                          <div class="map_tan_canshu">总电压<br/>37.5V</div>
-                          <div class="map_tan_canshu">总电流<br/>0A</div>
-                          <div class="map_tan_canshu">温度<br/>19℃～20℃</div>
+                          <div class="map_tan_canshu">放置<br/>80%</div>
+                          <div class="map_tan_canshu">充电<br/>37.5V</div>
+                          <div class="map_tan_canshu">放电<br/>0A</div>
+                          <div class="map_tan_canshu">未知<br/>19℃～20℃</div>
                         </div>`
               }
             },

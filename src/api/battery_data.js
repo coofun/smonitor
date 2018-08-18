@@ -6,6 +6,13 @@ export function getBatteryData() {
     method: 'post'
   })
 }
+export function getBatteryStatusByParams(city) {
+  return request({
+    url: '/cwld/smartBatteryAction/getBatteryStatusByParams.action',
+    method: 'post',
+    params: { city: city }
+  })
+}
 
 export function getBatteryAlarmNumByParams(city, startTime, endTime) {
   let params = {}

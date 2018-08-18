@@ -7,8 +7,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'dashboard',
-      component: () => import('@/views/dashboard')
+      name: 'home',
+      component: () => import('@/views/dashboard.vue')
     }
   ]
 })
