@@ -2,21 +2,22 @@
   <div id="dashboard">
     <div class="neirong">
         <tab-vertical></tab-vertical>
-        <battery-china-map :cities="cities" :batteryData="batteryData"></battery-china-map>
+        <battery-china-map></battery-china-map>
         <div class="tongji">
-            <chart-ring></chart-ring>
+            <chart-ring :city-list="cityList" :current-city="currentCity"></chart-ring>
             <div class="tongji_tit">电池状态统计</div>
-            <battery-amount-bar :batteryData="batteryData"></battery-amount-bar>
+            <battery-amount-bar :city-list="cityList"></battery-amount-bar>
             <div class="tongji_tit">全国各省份电池数量统计</div>
             <battery-alarm-line :current-city="currentCity"></battery-alarm-line>
             <div class="tongji_tit">电池报警数量</div>
         </div>
     </div>
-    <city-list :cities="cities" :current-city="currentCity" @select-city="selectCity"></city-list>
+    <city-list :city-list="cityList" :current-city="currentCity" @select-city="selectCity"></city-list>
   </div>
 </template>
 
 <script>
+import { getBatteryData } from '@/api/battery_data.js'
 import TabVertical from '@/components/tab-vertical.vue'
 import BatteryChinaMap from '@/components/battery-china-map.vue'
 import ChartRing from '@/components/chart/ring.vue'
@@ -26,10 +27,6 @@ import CityList from '@/components/city-list.vue'
 
 export default {
   name: 'home',
-  props: {
-    cities: Array,
-    batteryData: Array
-  },
   components: {
     TabVertical,
     BatteryChinaMap,
@@ -40,6 +37,7 @@ export default {
   },
   data() {
     return {
+      cityList: [],
       currentCity: null
     }
   },
@@ -49,6 +47,13 @@ export default {
     }
   },
   mounted() {
+    getBatteryData().then(response => {
+      if (response.data && response.data.length > 0) {
+        this.cityList = response.data
+        this.currentCity = response.data[0]
+      }
+    })
+
     this.$on('select-city')
   }
 }

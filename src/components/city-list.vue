@@ -3,7 +3,7 @@
       <div class="right_menu_tit"></div>
       <div class="diquliebiao">
         <ul>
-          <li v-for="city in cityList" :key="city.city" @click="selectCity(city)"><img src="@/assets/images/北京.png">{{city.city}}</li>
+          <li v-for="city in cities" :key="city" @click="selectCity(city)"><img src="@/assets/images/北京.png">{{city}}</li>
         </ul>
       </div>
     </div>
@@ -12,7 +12,7 @@
 <script>
 export default {
   name: 'city-list',
-  props: { cityList: Array, currentCity: Object },
+  props: { cities: Array, currentCity: Object },
   methods: {
     selectCity(city) {
       this.$emit('select-city', city)

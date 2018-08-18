@@ -10,62 +10,9 @@ import 'echarts/map/js/china-contour.js'
 
 const geoCoordMap = require('../data/geoCoordMap.json')
 
-var data = [
-  {
-    name: '齐齐哈尔'
-  },
-  {
-    name: '盐城'
-  },
-  {
-    name: '青岛'
-  },
-  {
-    name: '金昌'
-  },
-  {
-    name: '泉州'
-  },
-  {
-    name: '拉萨'
-  },
-  {
-    name: '上海浦东'
-  },
-  {
-    name: '攀枝花'
-  },
-  {
-    name: '威海'
-  },
-  {
-    name: '承德'
-  },
-  {
-    name: '汕尾'
-  },
-  {
-    name: '克拉玛依'
-  },
-  {
-    name: '重庆市'
-  }
-]
-var convertData = function(data) {
-  var res = []
-  for (var i = 0; i < data.length; i++) {
-    var geoCoord = geoCoordMap[data[i].name] || geoCoordMap[data[i].name + '市']
-    if (geoCoord) {
-      res.push({
-        name: data[i].name,
-        value: geoCoord.concat(data[i].value)
-      })
-    }
-  }
-  return res
-}
 export default {
   name: 'battery-china-map',
+  props: { cities: Array, batteryData: Array },
   data() {
     return {
       map: null
@@ -77,6 +24,9 @@ export default {
   methods: {
     initMap() {
       this.map = this.$echarts.init(document.getElementById('china-map'))
+      this.setOption()
+    },
+    setOption() {
       let option = {
         tooltip: {
           trigger: 'item'
@@ -164,18 +114,28 @@ export default {
               extraCssText:
                 'background: url(static/map_popup_bg.png) no-repeat; width: 294px; height: 117px; padding: 0',
               formatter: function(params, ticket, callback) {
-                return `<div class="map_tan_tit">济南市</div>
-                        <div class="baojingjibie">一级报警</div>
-                        <div class="dianchizhuangtai">放电</div>
-                        <div class="canshu_01">
-                          <div class="map_tan_canshu">放置<br/>80%</div>
-                          <div class="map_tan_canshu">充电<br/>37.5V</div>
-                          <div class="map_tan_canshu">放电<br/>0A</div>
-                          <div class="map_tan_canshu">未知<br/>19℃～20℃</div>
-                        </div>`
+                return (
+                  '<div class="map_tan_tit">' +
+                  params.data.name +
+                  '</div>' +
+                  '<div class="canshu_01">' +
+                  '<div class="map_tan_canshu">放置<br/>' +
+                  params.data.shunt +
+                  '</div>' +
+                  '<div class="map_tan_canshu">充电<br/>' +
+                  params.data.charging +
+                  '</div>' +
+                  '<div class="map_tan_canshu">放电<br/>' +
+                  params.data.discharge +
+                  '</div>' +
+                  '<div class="map_tan_canshu">未知<br/>' +
+                  params.data.unknown +
+                  '</div>' +
+                  '</div>'
+                )
               }
             },
-            data: convertData(data)
+            data: this.cityBatteryDataList
           }
         ]
       }
@@ -199,6 +159,34 @@ export default {
         autoHoverTip()
         setInterval(autoHoverTip, 10000)
       }, 500)
+    },
+    getCityName(city) {
+      return city.endsWith('市') ? city.substring(0, city.length - 1) : city
+    }
+  },
+  watch: {
+    batteryData() {
+      this.setOption()
+    }
+  },
+  computed: {
+    cityBatteryDataList() {
+      let data = []
+      if (this.batteryData) {
+        this.batteryData.forEach(item => {
+          data.push({
+            name: item.city,
+            total: item.total || 0,
+            shunt: item.shunt || 0,
+            charging: item.charging || 0,
+            discharge: item.discharge || 0,
+            unknown: item.unknown || 0,
+            value: geoCoordMap[this.getCityName(item.city)]
+          })
+        })
+      }
+
+      return data
     }
   }
 }

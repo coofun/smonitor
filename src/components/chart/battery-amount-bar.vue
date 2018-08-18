@@ -5,31 +5,28 @@
 <script>
 export default {
   name: 'battery-amount-bar',
-  props: { cityList: Array },
+  props: { batteryData: Array },
   data() {
     return {
       chart: null
     }
   },
-  watch: {
-    cityList: function(list) {
+  methods: {
+    setOption: function() {
       let xData = []
       let yData = []
-      if (this.cityList && this.cityList.length > 0) {
-        for (let i = 0; i < this.cityList.length; i++) {
-          if (this.cityList[i].city) {
-            xData.push(this.cityList[i].city)
-          }
+      if (this.batteryData) {
+        for (let i = 0; i < this.batteryData.length; i++) {
+          xData.push(this.batteryData[i].city)
         }
         for (let j = 0; j < xData.length; j++) {
           yData.push(
-            this.cityList.find(city => {
+            this.batteryData.find(city => {
               return city.city === xData[j]
             }).total
           )
         }
       }
-
       this.chart.setOption({
         backgroundColor: 'transparent',
         xAxis: {
@@ -67,8 +64,14 @@ export default {
       })
     }
   },
+  watch: {
+    batteryData: function(list) {
+      this.setOption()
+    }
+  },
   mounted() {
     this.chart = this.$echarts.init(document.getElementById('chart_bar'))
+    this.setOption()
   }
 }
 </script>
