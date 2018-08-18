@@ -7,7 +7,7 @@
             <div class="tongji_tit">电池状态统计</div>
             <battery-amount-bar :batteryData="batteryData"></battery-amount-bar>
             <div class="tongji_tit">全国各省份电池数量统计</div>
-            <battery-alarm-line :current-city="currentCity"></battery-alarm-line>
+            <battery-alarm-line></battery-alarm-line>
             <div class="tongji_tit">电池报警数量</div>
         </div>
     </div>
@@ -42,20 +42,35 @@ export default {
   },
   methods: {
     selectCity(city) {
-      this.currentCity = city
+      this.$emit('select-city', city)
     }
-  },
-  mounted() {
-    this.$on('select-city')
   }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 #dashboard {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
+  .neirong {
+    margin-top: 77px;
+    width: 100%;
+    height: 100%;
+    .tongji {
+      margin-top: 20px;
+      width: 390px;
+      height: 100%;
+      float: left;
+      .tongji_tit {
+        color: #d6b469;
+        font-size: 22px;
+        text-align: center;
+        width: 390px;
+        margin-top: 8px;
+      }
+    }
+  }
 }
 </style>

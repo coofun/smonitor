@@ -194,8 +194,8 @@ export default {
 
 <style lang="scss" scoped>
 .map-wrapper {
-  width: 1213px;
-  height: 949px;
+  width: calc(100% - 681px);
+  height: 100%;
   float: left;
   .map-container {
     width: 100%;

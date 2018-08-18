@@ -7,7 +7,6 @@ import { getBatteryAlarmNumByParams } from '@/api/battery_data.js'
 
 export default {
   name: 'battery-alarm-line',
-  props: { currentCity: Object },
   data() {
     return {
       chart: null,

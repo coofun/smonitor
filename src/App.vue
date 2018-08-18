@@ -18,7 +18,7 @@
             <div class="tab-item-title">换电柜</div>
         </div>
     </div>
-    <component :is="currentView" :cities="cities" :batteryData="batteryData"></component>
+    <component :is="currentView" :cities="cities" :currentCity="currentCity || cities[0]" :batteryData="batteryData" @select-city="selectCity"></component>
 </div>
 </template>
 
@@ -36,9 +36,16 @@ export default {
   },
   data() {
     return {
+      currentCity: null,
       currentView: 'home',
       cities: [],
       batteryData: []
+    }
+  },
+  methods: {
+    selectCity(city) {
+      this.currentCity = city
+      this.currentView = 'citymap'
     }
   },
   mounted() {

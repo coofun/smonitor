@@ -1,13 +1,15 @@
 <template>
-  <baidu-map class="map" :center="center" :zoom="zoom" :mapStyle="mapStyle"></baidu-map>
+  <baidu-map class="map" :center="currentCity" :zoom="zoom" :mapStyle="mapStyle"></baidu-map>
 </template>
 
 <script>
 export default {
   name: 'city-map',
+  props: {
+    currentCity: String
+  },
   data() {
     return {
-      center: '济南市',
       zoom: 15,
       mapStyle: {
         features: ['point', 'road', 'water', 'land', 'building'],
