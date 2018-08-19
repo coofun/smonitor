@@ -1,37 +1,54 @@
 <template>
 <div class="city-map-container">
     <baidu-map class="map" :center="center" :zoom="zoom" :mapStyle="mapStyle">
-        <bm-marker v-for="point of points" :key="point" :position="point" :icon="{url: 'static/images/point.png', size: {width: 30, height: 30}}">
+        <bm-marker v-for="point of points" :key="point.battery.city" :position="point" :icon="{url: 'static/images/point.png', size: {width: 30, height: 30}}" @click="battery=point.battery">
         </bm-marker>
     </baidu-map>
-    <div class="popup">
-        <div class="popup-title">61704006257电池</div>
+    <div :model="battery" v-if="battery != null" class="popup">
+        <i class="el-icon-close" @click="clearBattery"></i>
+        <div class="popup-title">{{ battery.zdid }}电池</div>
         <div class="popup-status">
             <div class="popup-status-alarm">一级报警</div>
             <div class="popup-status-charging">放电</div>
         </div>
         <div class="popup-data">
-            <div class="popup-data-item"><span class="num">80</span>%<br> 电量
+            <div class="popup-data-item"><span class="num">{{ battery.soc }}</span>%<br> 电量
             </div>
-            <div class="popup-data-item"><span class="num">37.5</span>V<br> 总电压
+            <div class="popup-data-item"><span class="num">{{ battery.zdy }}</span>V<br> 总电压
             </div>
-            <div class="popup-data-item"><span class="num">0</span>A<br> 总电流
+            <div class="popup-data-item"><span class="num">{{ battery.zdl }}</span>A<br> 总电流
             </div>
-            <div class="popup-data-item"><span class="num">19</span>℃～<span class="num">20</span>℃<br> 温度
-            </div>
-        </div>
-        <div class="popup-time">
-            <div class="popup-time-start">开始时间<br>
-                <input type="date" class="popup-time-date">
-            </div>
-            <div class="popup-time-end">结束时间<br>
-                <input type="date" class="popup-time-date">
+            <div class="popup-data-item"><span class="num">{{ battery.wdmin }}</span>℃～<span class="num">{{ battery.wdmax }}</span>℃<br> 温度
             </div>
         </div>
         <div class="popup-info">
-            <div class="popup-info-item">服务器时间<br> 64752354589 </div>
-            <div class="popup-info-item">电池编号<br> 64752354589 </div>
-            <div class="popup-info-item">电池节数<br> 64节 </div>
+            <div class="popup-info-item">服务器时间<br> {{ formattedTime }} </div>
+            <div class="popup-info-item">电池编号<br> {{ battery.batchNo }} </div>
+            <div class="popup-info-item">电池节数<br> {{ battery.zdjs }}节 </div>
+        </div>
+        <div class="popup-time">
+            <el-row>
+                <el-col :span="6">
+                    <strong>请选择回放时间</strong>
+                </el-col>
+                <el-col :span="18">
+                    <el-button-group>
+                        <el-button type="warning" @click="replayRecentOneHour">前一小时</el-button>
+                        <el-button type="warning" @click="replayToday">今天</el-button>
+                        <el-button type="warning" @click="replayYestoday">昨天</el-button>
+                        <el-button type="warning" @click="replayDayBeforYestoday">前天</el-button>
+                    </el-button-group>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="6">
+                  &nbsp;
+                </el-col>
+                <el-col :span="18">
+                    <el-date-picker v-model="replayDate" type="date" placeholder="选择日期">
+                    </el-date-picker>
+                </el-col>
+            </el-row>
         </div>
     </div>
 </div>
@@ -46,13 +63,47 @@ export default {
   },
   data() {
     return {
+      battery: null,
       zoom: 15,
       mapStyle: {
         features: ['point', 'road', 'water', 'land', 'building'],
         style: 'dark'
       },
-      points: []
+      points: [],
+      replayDate: null
     }
+  },
+  methods: {
+    clearBattery() {
+      this.battery = null
+    },
+    replayRecentOneHour() {
+      let oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000)
+      let start = oneHourAgo.format('yyyy-MM-dd hh:mm:ss')
+      let end = new Date().format('yyyy-MM-dd hh:mm:ss')
+      this.replay(start, end)
+    },
+    replayToday() {
+      let start = new Date().format('yyyy-MM-dd 00:00:00')
+      let end = new Date().format('yyyy-MM-dd 23:59:59')
+      this.replay(start, end)
+    },
+    replayYestoday() {
+      let yestoday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000)
+      let start = yestoday.format('yyyy-MM-dd hh:mm:ss')
+      let end = yestoday.format('yyyy-MM-dd hh:mm:ss')
+      this.replay(start, end)
+    },
+    replayDayBeforYestoday() {
+      let currntTime = new Date().getTime()
+      let dayBeforYestoday = new Date(currntTime - 2 * 24 * 60 * 60 * 1000)
+      let start = dayBeforYestoday.format('yyyy-MM-dd hh:mm:ss')
+      let end = dayBeforYestoday.format('yyyy-MM-dd hh:mm:ss')
+      this.replay(start, end)
+    },
+    replay(startTime, endTime) {},
+    pause() {},
+    reset() {}
   },
   mounted() {
     let points = (this.points = [])
@@ -61,8 +112,10 @@ export default {
         resp.data.forEach(element => {
           points.push({
             lng: element.jd,
-            lat: element.wd
+            lat: element.wd,
+            battery: element
           })
+          console.log(element)
         })
       }
     })
@@ -70,6 +123,11 @@ export default {
   computed: {
     center() {
       return this.currentCity
+    },
+    formattedTime() {
+      let date = new Date()
+      date.setTime(this.battery.jssj.time)
+      return date.format('yyyy-MM-dd hh:mm:ss')
     }
   }
 }
@@ -96,6 +154,12 @@ export default {
     height: 364px;
     right: 87px;
     top: 187px;
+    .el-icon-close {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      color: #ffaf3d;
+    }
     &-title {
       color: #fff;
       font-size: 20px;
@@ -145,7 +209,10 @@ export default {
       }
     }
     &-time {
-      margin-top: 150px;
+      margin-top: 220px;
+      padding-left: 20px;
+      color: #fff;
+      vertical-align: center;
       &-start {
         width: 240px;
         color: #fff;
@@ -168,18 +235,32 @@ export default {
       }
     }
     &-info {
-      margin-top: 240px;
+      margin-top: 150px;
       text-align: center;
-      padding-left: 80px;
+      padding-left: 5px;
       &-item {
         color: #fff;
         text-align: center;
         height: 38px;
         float: left;
-        margin-left: 13px;
-        margin-right: 13px;
+        margin-left: 10px;
+        margin-right: 10px;
       }
     }
   }
+}
+</style>
+
+<style>
+.el-button--warning {
+  color: #fff;
+  background-color: transparent;
+  border-color: #d6b469;
+}
+.el-input--prefix .el-input__inner {
+  color: #fff;
+  margin-top: 8px;
+  background-color: transparent;
+  border-color: #d6b469;
 }
 </style>

@@ -31,6 +31,10 @@ a {
 .diquliebiao ul {
   padding: 0px;
 }
+.map_tan_canshu {
+  color: #fff;
+  text-align: center;
+}
 /*地图弹出*/
 .map_tan {
   background: url(../assets/images/map_tan_bg.png) no-repeat;
@@ -70,6 +74,12 @@ a {
   text-align: center;
   margin-top: 16px;
   margin-right: 10px;
+}
+.map_tan_canshu {
+  height: 38px;
+  float: left;
+  margin-left: 13px;
+  margin-right: 13px;
 }
 .canshu_01 {
   margin-top: 60px;
