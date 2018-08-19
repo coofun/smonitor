@@ -38,3 +38,11 @@ export function getBatteryDataByCity(city) {
     data: { city: city }
   })
 }
+
+export function getBatteryTrackByParams(deviceId, startTime, endTime) {
+  return request({
+    url: '/cwld/smartBatteryAction/getBatteryTrackByParams.action',
+    method: 'post',
+    data: { deviceId: deviceId, startTime: startTime, endTime: endTime }
+  })
+}
