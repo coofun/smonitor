@@ -43,6 +43,6 @@ export function getBatteryTrackByParams(deviceId, startTime, endTime) {
   return request({
     url: '/cwld/smartBatteryAction/getBatteryTrackByParams.action',
     method: 'post',
-    data: { deviceId: deviceId, startTime: startTime, endTime: endTime }
+    params: { deviceId: deviceId, startTime: startTime, endTime: endTime }
   })
 }

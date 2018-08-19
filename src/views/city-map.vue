@@ -1,6 +1,6 @@
 <template>
 <div class="city-map-container">
-    <baidu-map class="map" :center="center" :zoom="zoom" :mapStyle="mapStyle">
+    <baidu-map class="map" :center="center" :zoom="zoom" :mapStyle="mapStyle" :scroll-wheel-zoom="true" @ready="mapReady">
         <bm-marker v-for="point of points" :key="point.battery.city" :position="point" :icon="{url: 'static/images/point.png', size: {width: 30, height: 30}}" @click="battery=point.battery">
         </bm-marker>
     </baidu-map>
@@ -42,7 +42,7 @@
             </el-row>
             <el-row>
                 <el-col :span="6">
-                  &nbsp;
+                    &nbsp;
                 </el-col>
                 <el-col :span="18">
                     <el-date-picker v-model="replayDate" type="date" placeholder="选择日期">
@@ -55,7 +55,10 @@
 </template>
 
 <script>
-import { getBatteryDataByCity } from '@/api/battery_data.js'
+import {
+  getBatteryDataByCity,
+  getBatteryTrackByParams
+} from '@/api/battery_data.js'
 export default {
   name: 'city-map',
   props: {
@@ -63,6 +66,8 @@ export default {
   },
   data() {
     return {
+      BMap: null,
+      map: null,
       battery: null,
       zoom: 15,
       mapStyle: {
@@ -70,10 +75,18 @@ export default {
         style: 'dark'
       },
       points: [],
-      replayDate: null
+      replayDate: null,
+      trackList: [],
+      pause: false,
+      index: 0,
+      timer: null
     }
   },
   methods: {
+    mapReady(event) {
+      this.BMap = event.BMap
+      this.map = event.map
+    },
     clearBattery() {
       this.battery = null
     },
@@ -90,20 +103,95 @@ export default {
     },
     replayYestoday() {
       let yestoday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000)
-      let start = yestoday.format('yyyy-MM-dd hh:mm:ss')
-      let end = yestoday.format('yyyy-MM-dd hh:mm:ss')
+      let start = yestoday.format('yyyy-MM-dd 00:00:00')
+      let end = yestoday.format('yyyy-MM-dd 23:59:59')
       this.replay(start, end)
     },
     replayDayBeforYestoday() {
       let currntTime = new Date().getTime()
       let dayBeforYestoday = new Date(currntTime - 2 * 24 * 60 * 60 * 1000)
-      let start = dayBeforYestoday.format('yyyy-MM-dd hh:mm:ss')
-      let end = dayBeforYestoday.format('yyyy-MM-dd hh:mm:ss')
+      let start = dayBeforYestoday.format('yyyy-MM-dd 00:00:00')
+      let end = dayBeforYestoday.format('yyyy-MM-dd 23:59:59')
       this.replay(start, end)
     },
-    replay(startTime, endTime) {},
-    pause() {},
-    reset() {}
+    replay(startTime, endTime) {
+      this.loadBatteryTrack(startTime, endTime)
+    },
+    loadBatteryTrack(startTime, endTime) {
+      let trackList = (this.trackList = [])
+      let play = this.play
+      getBatteryTrackByParams(this.battery.zdid, startTime, endTime).then(
+        resp => {
+          if (resp && resp.status === 200 && resp.data) {
+            resp.data.forEach(item => {
+              trackList.push(item)
+            })
+            play.call()
+          }
+        }
+      )
+    },
+    play() {
+      if (this.pause || !this.trackList || !this.trackList.length) {
+        return
+      }
+
+      if (this.index < this.trackList.length) {
+        // eslint-disable-next-line
+        let point = new this.BMap.Point(
+          this.trackList[0].x,
+          this.trackList[0].y
+        )
+        let prePoint = null
+        if (this.index > 0) {
+          // eslint-disable-next-line
+          prePoint = new BMap.Point(
+            this.trackList[this.index - 1].x,
+            this.trackList[this.index - 1].y
+          )
+        }
+
+        let marker = null
+
+        if (this.index === 0) {
+          // this.map.clearOverlays()
+          // eslint-disable-next-line
+          marker = new this.BMap.Marker(point, {
+            icon: this.iconStart
+          })
+          this.timer = setTimeout(() => {
+            this.play()
+          }, 500)
+        } else if (this.index === this.trackList - 1) {
+          // eslint-disable-next-line
+          marker = new BMap.Marker(point, { icon: this.iconEnd })
+
+          window.clearInterval(this.timer)
+          this.timer = null
+        } else {
+          this.map.addOverlay(
+            // eslint-disable-next-line
+            new BMap.Polyline([prePoint, point], {
+              strokeColor: 'red',
+              strokeWeight: 5,
+              strokeOpacity: 0.5
+            })
+          )
+        }
+        if (marker) {
+          this.map.addOverlay(marker)
+        }
+        this.map.centerAndZoom(point, 16)
+
+        if (!this.map.getBounds().containsPoint(point)) {
+          this.map.panTo(point)
+        }
+
+        this.index++
+      } else {
+        this.pause = true
+      }
+    }
   },
   mounted() {
     let points = (this.points = [])
@@ -115,7 +203,6 @@ export default {
             lat: element.wd,
             battery: element
           })
-          console.log(element)
         })
       }
     })
@@ -256,6 +343,10 @@ export default {
   color: #fff;
   background-color: transparent;
   border-color: #d6b469;
+}
+.el-date-editor.el-input,
+.el-date-editor.el-input__inner {
+  width: 180px;
 }
 .el-input--prefix .el-input__inner {
   color: #fff;
