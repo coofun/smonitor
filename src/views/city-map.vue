@@ -1,14 +1,13 @@
 <template>
 <div class="city-map-container">
-    <baidu-map class="map" :center="center" :zoom="zoom" :mapStyle="mapStyle" :scroll-wheel-zoom="true" @ready="mapReady">
+    <baidu-map class="map" :center="center" :zoom="zoom" :mapStyle="mapStyle" :scroll-wheel-zoom="true" @ready="ready">
         <bm-marker v-for="point of points" :key="point.battery.city" :position="point" :icon="{url: 'static/images/point.png', size: {width: 30, height: 30}}" @click="battery=point.battery">
         </bm-marker>
     </baidu-map>
-    <div :model="battery" v-if="battery != null" class="popup">
+    <div v-if="battery != null" class="popup">
         <i class="el-icon-close" @click="clearBattery"></i>
-        <div class="popup-title">{{ battery.zdid }}电池</div>
+        <div class="popup-title">{{ battery.batchNo }}</div>
         <div class="popup-status">
-            <div class="popup-status-alarm">一级报警</div>
             <div class="popup-status-charging">放电</div>
         </div>
         <div class="popup-data">
@@ -23,7 +22,7 @@
         </div>
         <div class="popup-info">
             <div class="popup-info-item">服务器时间<br> {{ formattedTime }} </div>
-            <div class="popup-info-item">电池编号<br> {{ battery.batchNo }} </div>
+            <div class="popup-info-item">电池编号<br> {{ battery.zdid }} </div>
             <div class="popup-info-item">电池节数<br> {{ battery.zdjs }}节 </div>
         </div>
         <div class="popup-time">
@@ -33,10 +32,10 @@
                 </el-col>
                 <el-col :span="18">
                     <el-button-group>
-                        <el-button type="warning" @click="replayRecentOneHour">前一小时</el-button>
-                        <el-button type="warning" @click="replayToday">今天</el-button>
-                        <el-button type="warning" @click="replayYestoday">昨天</el-button>
-                        <el-button type="warning" @click="replayDayBeforYestoday">前天</el-button>
+                        <el-button type="warning" @click="trackRecentOneHour">前一小时</el-button>
+                        <el-button type="warning" @click="trackToday">今天</el-button>
+                        <el-button type="warning" @click="trackYestoday">昨天</el-button>
+                        <el-button type="warning" @click="trackDayBeforYestoday">前天</el-button>
                     </el-button-group>
                 </el-col>
             </el-row>
@@ -45,7 +44,7 @@
                     &nbsp;
                 </el-col>
                 <el-col :span="18">
-                    <el-date-picker v-model="replayDate" type="date" placeholder="选择日期">
+                    <el-date-picker v-model="trackDay" type="date" placeholder="选择日期">
                     </el-date-picker>
                 </el-col>
             </el-row>
@@ -75,39 +74,56 @@ export default {
         style: 'dark'
       },
       points: [],
-      replayDate: null,
-      trackList: [],
-      pause: false,
-      index: 0,
-      timer: null
+      trackDay: null,
+      trackPointList: [],
+      trackPointIndex: 0,
+      trackOverLayers: [],
+      trackTimer: null
     }
   },
   methods: {
-    mapReady(event) {
-      this.BMap = event.BMap
-      this.map = event.map
+    ready(event) {
+      let _self = this
+
+      _self.BMap = event.BMap
+      _self.map = event.map
+
+      getBatteryDataByCity(this.currentCity).then(resp => {
+        if (resp && resp.status === 200 && resp.data) {
+          resp.data.forEach(element => {
+            _self.points.push({
+              lng: element.jd,
+              lat: element.wd,
+              battery: element
+            })
+          })
+        }
+      })
     },
     clearBattery() {
-      this.battery = null
+      let _self = this
+      _self.battery = null
+      _self.resetTrack()
+      _self.map.reset()
     },
-    replayRecentOneHour() {
+    trackRecentOneHour() {
       let oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000)
       let start = oneHourAgo.format('yyyy-MM-dd hh:mm:ss')
       let end = new Date().format('yyyy-MM-dd hh:mm:ss')
       this.replay(start, end)
     },
-    replayToday() {
+    trackToday() {
       let start = new Date().format('yyyy-MM-dd 00:00:00')
       let end = new Date().format('yyyy-MM-dd 23:59:59')
       this.replay(start, end)
     },
-    replayYestoday() {
+    trackYestoday() {
       let yestoday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000)
       let start = yestoday.format('yyyy-MM-dd 00:00:00')
       let end = yestoday.format('yyyy-MM-dd 23:59:59')
       this.replay(start, end)
     },
-    replayDayBeforYestoday() {
+    trackDayBeforYestoday() {
       let currntTime = new Date().getTime()
       let dayBeforYestoday = new Date(currntTime - 2 * 24 * 60 * 60 * 1000)
       let start = dayBeforYestoday.format('yyyy-MM-dd 00:00:00')
@@ -115,97 +131,83 @@ export default {
       this.replay(start, end)
     },
     replay(startTime, endTime) {
-      this.loadBatteryTrack(startTime, endTime)
-    },
-    loadBatteryTrack(startTime, endTime) {
-      let trackList = (this.trackList = [])
-      let play = this.play
+      let _self = this
+      _self.resetTrack()
       getBatteryTrackByParams(this.battery.zdid, startTime, endTime).then(
         resp => {
           if (resp && resp.status === 200 && resp.data) {
             resp.data.forEach(item => {
-              trackList.push(item)
+              _self.trackPointList.push(item)
             })
-            play.call()
+            _self.play.call()
           }
         }
       )
     },
     play() {
-      if (this.pause || !this.trackList || !this.trackList.length) {
+      let _self = this
+      if (!_self.trackPointList || !_self.trackPointList.length) {
         return
       }
 
-      if (this.index < this.trackList.length) {
-        // eslint-disable-next-line
-        let point = new this.BMap.Point(
-          this.trackList[0].x,
-          this.trackList[0].y
-        )
-        let prePoint = null
-        if (this.index > 0) {
-          // eslint-disable-next-line
-          prePoint = new BMap.Point(
-            this.trackList[this.index - 1].x,
-            this.trackList[this.index - 1].y
-          )
-        }
+      let point = new _self.BMap.Point(
+        _self.trackPointList[_self.trackPointIndex].x,
+        _self.trackPointList[_self.trackPointIndex].y
+      )
+      let prePoint = _self.trackPointIndex > 0 ? new _self.BMap.Point(_self.trackPointList[_self.trackPointIndex - 1].x, _self.trackPointList[_self.trackPointIndex - 1].y) : null
 
-        let marker = null
+      if (_self.trackPointIndex === 0) {
+        let startMarker = new _self.BMap.Marker(point)
+        _self.map.addOverlay(startMarker)
+        _self.trackOverLayers.push(startMarker)
+      }
 
-        if (this.index === 0) {
-          // this.map.clearOverlays()
-          // eslint-disable-next-line
-          marker = new this.BMap.Marker(point, {
-            icon: this.iconStart
-          })
-          this.timer = setTimeout(() => {
-            this.play()
-          }, 500)
-        } else if (this.index === this.trackList - 1) {
-          // eslint-disable-next-line
-          marker = new BMap.Marker(point, { icon: this.iconEnd })
+      if (prePoint) {
+        let overlay = new _self.BMap.Polyline([prePoint, point], {
+          strokeColor: 'red',
+          strokeWeight: 5,
+          strokeOpacity: 0.5
+        })
+        _self.map.addOverlay(overlay)
+        _self.trackOverLayers.push(overlay)
+      }
 
-          window.clearInterval(this.timer)
-          this.timer = null
-        } else {
-          this.map.addOverlay(
-            // eslint-disable-next-line
-            new BMap.Polyline([prePoint, point], {
-              strokeColor: 'red',
-              strokeWeight: 5,
-              strokeOpacity: 0.5
-            })
-          )
-        }
-        if (marker) {
-          this.map.addOverlay(marker)
-        }
-        this.map.centerAndZoom(point, 16)
+      if (_self.trackPointIndex === _self.trackPointList.length - 1) {
+        let endMarker = new _self.BMap.Marker(point)
+        _self.map.addOverlay(endMarker)
+        _self.trackOverLayers.push(endMarker)
+      }
 
-        if (!this.map.getBounds().containsPoint(point)) {
-          this.map.panTo(point)
-        }
-
-        this.index++
+      if (_self.trackPointIndex < _self.trackPointList.length - 1) {
+        _self.trackTimer = setTimeout(() => {
+          _self.play()
+        }, 500)
       } else {
-        this.pause = true
+        window.clearInterval(_self.trackTimer)
+        _self.trackTimer = null
+      }
+
+      _self.map.centerAndZoom(point, 15)
+      _self.map.panTo(point)
+      _self.trackPointIndex++
+    },
+    resetTrack() {
+      let _self = this
+      if (_self.trackTimer) {
+        window.clearInterval(_self.trackTimer)
+      }
+
+      _self.trackTimer = null
+      _self.trackPointIndex = 0
+
+      while (_self.trackPointList.length > 0) {
+        _self.trackPointList.pop()
+      }
+
+      while (_self.trackOverLayers.length > 0) {
+        _self.map.removeOverlay(_self.trackOverLayers.pop())
       }
     }
-  },
-  mounted() {
-    let points = (this.points = [])
-    getBatteryDataByCity(this.currentCity).then(resp => {
-      if (resp && resp.status === 200 && resp.data) {
-        resp.data.forEach(element => {
-          points.push({
-            lng: element.jd,
-            lat: element.wd,
-            battery: element
-          })
-        })
-      }
-    })
   },
   computed: {
     center() {
@@ -215,6 +217,16 @@ export default {
       let date = new Date()
       date.setTime(this.battery.jssj.time)
       return date.format('yyyy-MM-dd hh:mm:ss')
+    }
+  },
+  watch: {
+    trackDay(date) {
+      this.resetTrack()
+      if (date) {
+        let start = date.format('yyyy-MM-dd 00:00:00')
+        let end = date.format('yyyy-MM-dd 23:59:59')
+        this.replay(start, end)
+      }
     }
   }
 }
@@ -324,7 +336,7 @@ export default {
     &-info {
       margin-top: 150px;
       text-align: center;
-      padding-left: 5px;
+      padding-left: 80px;
       &-item {
         color: #fff;
         text-align: center;
@@ -344,10 +356,12 @@ export default {
   background-color: transparent;
   border-color: #d6b469;
 }
+
 .el-date-editor.el-input,
 .el-date-editor.el-input__inner {
   width: 180px;
 }
+
 .el-input--prefix .el-input__inner {
   color: #fff;
   margin-top: 8px;
