@@ -52,7 +52,12 @@ export default {
     },
     getFormattedStatusName(statusName, statusNum, totalNum) {
       return (
-        statusName + ':' + statusNum + ':' + percentString(statusNum, totalNum)
+        statusName +
+        ' ： ' +
+        statusNum +
+        ' （ ' +
+        percentString(statusNum, totalNum) +
+        ' )'
       )
     },
     setChartOption() {

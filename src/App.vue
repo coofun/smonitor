@@ -55,7 +55,6 @@ export default {
       if (resp && resp.status === 200 && resp.data) {
         resp.data.forEach(function(item) {
           if (item.city) {
-            cities.push(item.city)
             batteryData.push({
               city: item.city,
               total: item.total,
@@ -65,6 +64,12 @@ export default {
               unkonwn: item.unknown
             })
           }
+        })
+        batteryData.sort(function(a, b) {
+          return b.total - a.total
+        })
+        batteryData.forEach(function(item) {
+          cities.push(item.city)
         })
       }
     })
