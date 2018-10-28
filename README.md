@@ -1,6 +1,6 @@
-# smonitor
+# wanwei
 
-> A Vue.js project
+> Wan Wei smart monitoring platform
 
 ## Build Setup
 

@@ -1,9 +1,9 @@
 @charset "utf-8";
+
 html,
 body {
   margin: 0;
   padding: 0;
-  width: 100%;
   height: 100%;
 }
 body {
@@ -21,85 +21,4 @@ img {
 a {
   text-decoration: none;
   color: #616362;
-}
-/*tongji*/
-
-.tongji_pic {
-  width: 560px;
-  text-align: center;
-}
-.diquliebiao ul {
-  padding: 0px;
-}
-.map_tan_canshu {
-  color: #fff;
-  text-align: center;
-}
-/*地图弹出*/
-.map_tan {
-  background: url(../assets/images/map_tan_bg.png) no-repeat;
-  width: 294px;
-  height: 117px;
-}
-.map_time {
-  color: #fff;
-  font-size: 12px;
-}
-.map_tan_tit {
-  color: #fff;
-  font-size: 14px;
-  margin-top: 10px;
-  margin-left: 20px;
-  float: left;
-  width: 139px;
-}
-.baojingjibie {
-  color: #171717;
-  width: 64px;
-  height: 25px;
-  background: #f9fa9e;
-  float: right;
-  line-height: 25px;
-  text-align: center;
-  margin-top: 16px;
-  margin-right: 10px;
-}
-.dianchizhuangtai {
-  color: #ffffff;
-  width: 42px;
-  height: 25px;
-  background: #2a8700;
-  float: right;
-  line-height: 25px;
-  text-align: center;
-  margin-top: 16px;
-  margin-right: 10px;
-}
-.map_tan_canshu {
-  height: 38px;
-  float: left;
-  margin-left: 13px;
-  margin-right: 13px;
-}
-.canshu_01 {
-  margin-top: 60px;
-  text-align: center;
-}
-/*遮罩*/
-.zhezhao {
-  background: url(../assets/images/zhezhao.png);
-  width: 1920px;
-  height: 1080px;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  z-index: -1;
-}
-.map_2ji {
-  width: 1920px;
-  height: 1080px;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  z-index: -2;
 }
