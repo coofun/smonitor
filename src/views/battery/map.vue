@@ -67,6 +67,7 @@ export default {
       pointsMarked: [],
       markers: [],
       battery: null,
+      selectedMarkerPoint: null,
       queryString: null,
       showTrackMap: false,
       trackTime: 'recent-one-hour',
@@ -207,6 +208,17 @@ export default {
     },
     points(newVal, oldVal){
       this.markPoints()
+    },
+    battery(newVal, oldVal){
+      if(this.selectedMarker) {
+        this.map.removeOverlay(this.selectedMarker)
+        this.selectedMarker = null
+      }
+
+      if(this.battery && this.selectedMarkerPoint) {
+        this.selectedMarker = new BMap.Marker(this.selectedMarkerPoint)
+        this.map.addOverlay(this.selectedMarker)
+      }
     }
   },
   methods: {
@@ -261,6 +273,7 @@ export default {
     },
     onMarkerClick(event) {
       this.battery = event.target.battery
+      this.selectedMarkerPoint = event.target.point
     },
     closePopup() {
       this.battery = null
@@ -281,6 +294,7 @@ export default {
       let marker = this.markers.find(function(item) {
         return item.battery === battery
       })
+      this.selectedMarkerPoint = marker.point
       this.map.panTo(marker.point)
     },
     onOpenDialog() {
@@ -363,7 +377,10 @@ export default {
         }
       }
 
-      _this.trackMap.panTo(point)
+      if(!_this.trackMap.getBounds().containsPoint(point)) {
+        _this.trackMap.panTo(point)
+      }
+      
       _this.trackIndex++
 
       _this.trackTask = setTimeout(() => {
