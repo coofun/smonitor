@@ -41,21 +41,64 @@
                                     <el-radio-button label="yestoday">昨天</el-radio-button>
                                     <el-radio-button label="day-before-yestoday">前天</el-radio-button>
                                 </el-radio-group>
-                                <el-date-picker v-model="trackDate" type="date" placeholder="选择日期" style="margin-right: 50px">
+                                <el-date-picker v-model="trackDate" type="date" placeholder="选择日期" style="margin-left: 10px">
                                 </el-date-picker>
+                                <el-time-picker v-model="trackDateStartTime" placeholder="开始时间" style="margin-left: 10px">
+                                </el-time-picker>
+                                <el-time-picker arrow-control v-model="trackDateEndTime" placeholder="结束时间" style="margin-left: 10px; margin-right: 50px">
+                                </el-time-picker>                                
                                 <el-button v-if="canPlay" @click="play">播放</el-button>
                                 <el-button v-if="canPause" @click="playPause">暂停</el-button>
                                 <el-button v-if="canContinue" @click="playContinue">播放</el-button>
                                 <el-button v-if="canReset" @click="playReset">重置</el-button>
                             </el-col>
                         </el-row>
+                        <el-row v-if="trackStatus === 'playing' || trackStatus === 'pause' || trackStatus === 'over'" style="height: auto; position: absolute; left: 20px; top: 70px; z-index: 998; color: #ffaf3d; font-size: 14px; width: 100%">
+                            <el-col :span="2">
+                                速度: {{ speed }}
+                            </el-col> 
+                            <el-col :span="2">
+                                里程: {{ (trackDistance/1000).toFixed(2) }}KM
+                            </el-col>                                                    
+                            <el-col :span="4">
+                                定位时间: {{ locationTime }}
+                            </el-col>
+                        </el-row>
                         <div id="map-track"></div>
                     </el-dialog>
+                    <el-dialog :visible.sync="showLoginDialog" width="400px" center class="loginDialog">
+                        <div class="title-container">
+                          <h3 class="title">登录</h3>
+                        </div>                        
+                        <el-form class="login-form">
+                          <el-form-item label="用户名">
+                            <el-input type="text" v-model="username" placeholder="请输入用户名" />
+                          </el-form-item>
+                          <el-form-item label="密码">
+                            <el-input type="password" v-model="password" placeholder="请输入密码" @keyup.enter.native="handleLogin" />
+                          </el-form-item>
+                        </el-form>
+                        <span slot="footer" class="dialog-footer">
+                          <el-button @click="showLoginDialog = false">取消</el-button>
+                          <el-button type="primary" @click="handleLogin">确认</el-button>
+                        </span>
+                    </el-dialog>
+                    <div style="position: absolute; right: 50px; top: 5px; z-index: 9999">
+                      <el-dropdown v-if="$user.name"  @command="handleCommand" style="color: #ffaf3d; font-size: 18px">
+                        <span class="el-dropdown-link">
+                          欢迎您，{{ $user.name }}<i class="el-icon-arrow-down el-icon--right"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                          <el-dropdown-item command="logout">退出</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </el-dropdown>
+                      <el-button plain v-else @click="showLoginDialog=true" style="background-color: transparent; border-color: transparent; color: #ffaf3d; font-size: 18px">登录</el-button>
+                    </div>                  
                 </div>
 </template>
 
 <script>
-import { getBatteryDataByCity, getBatteryTrackByParams } from '@/data'
+import { getBatteryDataByCity, getBatteryTrackByParams, login } from '@/data'
 
 export default {
   data() {
@@ -70,14 +113,20 @@ export default {
       selectedMarkerPoint: null,
       queryString: null,
       showTrackMap: false,
+      showLoginDialog: false,
       trackTime: 'recent-one-hour',
       trackDate: null,
+      trackDateStartTime: null,
+      trackDateEndTime: null,
       trackStatus: null,
       trackPoints: [],
       trackIndex: 0,
       trackTask: null,
       trackStartIcon: new BMap.Icon('static/images/trace_start.png', new BMap.Size(40, 57)),
-      trackEndIcon: new BMap.Icon('static/images/trace_end.png', new BMap.Size(40, 57))
+      trackEndIcon: new BMap.Icon('static/images/trace_end.png', new BMap.Size(40, 57)),
+      trackDistance: 0,
+      username: null,
+      password: null
     }
   },
   created() {
@@ -112,8 +161,12 @@ export default {
     // 监听地图放大缩小事件
     this.map.addEventListener('zoomend', this.markPoints)
 
-    // 获取当前城市电池信息, 并初始化
-    getBatteryDataByCity(this.city).then(this.init)
+    if (!this.$user.id) {
+      this.showLoginDialog = true
+    } else {
+      // 获取当前城市电池信息, 并初始化
+      getBatteryDataByCity(this.city, this.$user.uid, this.$user.team).then(this.init)
+    }
   },
   computed: {
     batteryStatus() {
@@ -177,8 +230,8 @@ export default {
         }
       } else {
         return {
-          startTime: this.trackDate.format('yyyy-MM-dd 00:00:00'),
-          endTime: this.trackDate.format('yyyy-MM-dd 23:59:59')
+          startTime: this.trackDateStartTime.format('yyyy-MM-dd hh:mm:ss'),
+          endTime: this.trackDateEndTime.format('yyyy-MM-dd hh:mm:ss')
         }
       }
     },
@@ -193,29 +246,53 @@ export default {
     },
     canReset() {
       return this.trackStatus === 'pause' || this.trackStatus === 'over'
+    },
+    locationTime() {
+      if(this.trackPoints && this.trackPoints[this.trackIndex]) {
+        return new Date(this.trackPoints[this.trackIndex].jssj.time).format('yyyy-MM-dd hh:mm:ss')
+      }
+      return ''
+    },
+    speed() {
+      if(this.trackPoints && this.trackPoints[this.trackIndex]) {
+        return this.trackPoints[this.trackIndex].speed + " KM/H"
+      }
+      return ''
     }
   },
   watch: {
     trackTime(newVal, oldVal) {
       if (newVal) {
         this.trackDate = null
+        this.trackDateStartTime = null
+        this.trackDateEndTime = null
       }
     },
     trackDate(newVal, oldVal) {
       if (newVal) {
         this.trackTime = null
+
+        this.trackDateStartTime = new Date(newVal.getTime())
+        this.trackDateStartTime.setHours(0)
+        this.trackDateStartTime.setMinutes(0)
+        this.trackDateStartTime.setSeconds(0)
+
+        this.trackDateEndTime = new Date(newVal.getTime())
+        this.trackDateEndTime.setHours(23)
+        this.trackDateEndTime.setMinutes(59)
+        this.trackDateEndTime.setSeconds(59)        
       }
     },
-    points(newVal, oldVal){
+    points(newVal, oldVal) {
       this.markPoints()
     },
-    battery(newVal, oldVal){
-      if(this.selectedMarker) {
+    battery(newVal, oldVal) {
+      if (this.selectedMarker) {
         this.map.removeOverlay(this.selectedMarker)
         this.selectedMarker = null
       }
 
-      if(this.battery && this.selectedMarkerPoint) {
+      if (this.battery && this.selectedMarkerPoint) {
         this.selectedMarker = new BMap.Marker(this.selectedMarkerPoint)
         this.map.addOverlay(this.selectedMarker)
       }
@@ -252,22 +329,22 @@ export default {
         }
       }
     },
-    markPoints(){
+    markPoints() {
       let _this = this
 
       // 地图可视区域
-      let bounds = _this.map.getBounds();  
+      let bounds = _this.map.getBounds()
 
       _this.points.forEach(item => {
-        if(_this.pointsMarked.indexOf(item) === -1 && bounds.containsPoint(item)){
+        if (_this.pointsMarked.indexOf(item) === -1 && bounds.containsPoint(item)) {
           let marker = new BMap.Marker(item, {
             icon: _this.icon
           })
-          marker.battery = item.battery   
+          marker.battery = item.battery
           marker.addEventListener('click', _this.onMarkerClick)
           _this.map.addOverlay(marker)
-          _this.markers.push(marker)    
-          _this.pointsMarked.push(item)     
+          _this.markers.push(marker)
+          _this.pointsMarked.push(item)
         }
       })
     },
@@ -282,7 +359,7 @@ export default {
       let results = []
       if (queryString) {
         this.markers.forEach(function(marker) {
-          if (marker.battery && marker.battery.batchNo.startsWith(queryString.toUpperCase())) {
+          if (marker.battery && -1 !== marker.battery.batchNo.indexOf(queryString.toUpperCase())) {
             results.push(marker.battery)
           }
         })
@@ -354,12 +431,18 @@ export default {
         startMarker.setOffset(new BMap.Size(0, -25))
         _this.trackMap.addOverlay(startMarker)
       } else {
+        if (_this.lineEnder) {
+          _this.trackMap.removeOverlay(_this.lineEnder)
+          _this.lineEnder = null
+        }
         let prePoint = new BMap.Point(_this.trackPoints[_this.trackIndex - 1].x, _this.trackPoints[_this.trackIndex - 1].y)
+
+        _this.trackDistance += _this.trackMap.getDistance(prePoint, point)
 
         let polyline = new BMap.Polyline([prePoint, point], {
           strokeColor: 'red',
           strokeWeight: 5,
-          strokeOpacity: 0.5
+          strokeOpacity: 1
         })
 
         _this.trackMap.addOverlay(polyline)
@@ -374,13 +457,16 @@ export default {
           _this.playOver()
 
           return
+        } else {
+          _this.lineEnder = new BMap.Marker(point)
+          _this.trackMap.addOverlay(_this.lineEnder)
         }
       }
 
-      if(!_this.trackMap.getBounds().containsPoint(point)) {
+      if (!_this.trackMap.getBounds().containsPoint(point)) {
         _this.trackMap.panTo(point)
       }
-      
+
       _this.trackIndex++
 
       _this.trackTask = setTimeout(() => {
@@ -400,11 +486,55 @@ export default {
       this.trackPoints.splice(0, this.trackPoints.length)
       this.trackIndex = 0
       this.trackStatus = null
+      this.trackDistance = 0
       this.trackMap.clearOverlays()
     },
     playOver() {
       this.playPause()
       this.trackStatus = 'over'
+    },
+    handleLogin() {
+      let _this = this
+      if (!this.username) {
+        this.$message({
+          message: '请输入用户名.',
+          type: 'error'
+        })
+
+        return
+      }
+
+      if (!this.password) {
+        this.$message({
+          message: '请输入密码.',
+          type: 'error'
+        })
+
+        return
+      }
+
+      login(this.username, this.password).then(function(result) {
+        if (result.id) {
+          Object.assign(_this.$user, result)
+          _this.showLoginDialog = false
+          localStorage.setItem('user', JSON.stringify(_this.$user))
+          _this.$message({
+            message: '登录成功.',
+            type: 'success'
+          })
+          getBatteryDataByCity(_this.city, _this.$user.uid, _this.$user.team).then(_this.init)
+        } else {
+          _this.$message({
+            message: '登录失败，请重新登录.',
+            type: 'error'
+          })
+        }
+      })
+    },
+    handleCommand(command) {
+      this.$user = {}
+      localStorage.removeItem('user')
+      this.$forceUpdate()
     }
   }
 }
@@ -460,8 +590,6 @@ export default {
     }
 
     &-subtitle {
-      width: 500px;
-      height: 0;
       display: flex;
       flex-direction: row-reverse;
       justify-content: center;
@@ -492,9 +620,11 @@ export default {
     }
 
     &-content {
-      margin-top: 60px;
+      margin-top: 40px;
       text-align: center;
-      padding-left: 40px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
 
       &-item {
         height: 38px;
@@ -511,9 +641,11 @@ export default {
     }
 
     &-info {
-      margin-top: 160px;
+      margin-top: 40px;
       text-align: center;
-      padding-left: 80px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
 
       &-item {
         height: 38px;
@@ -526,7 +658,7 @@ export default {
     }
 
     &-footer {
-      margin-top: 240px;
+      margin-top: 40px;
       padding-left: 45px;
     }
   }
@@ -534,6 +666,18 @@ export default {
   #map-track {
     width: 100%;
     height: 800px;
+  }
+
+  .loginDialog {
+    .title-container {
+      position: relative;
+      .title {
+        font-size: 26px;
+        margin: 0px auto 12px auto;
+        text-align: center;
+        font-weight: bold;
+      }
+    }
   }
 }
 </style><style>
@@ -571,5 +715,6 @@ export default {
 .el-input__inner {
   background-color: transparent;
   border: 1px solid #ffaf3d;
+  color: #ffaf3d;
 }
 </style>

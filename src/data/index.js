@@ -1,3 +1,5 @@
+const md5 = require('js-md5')
+
 async function request(url, method, headers, body) {
   let option = { method: method ? method : 'GET' }
 
@@ -25,11 +27,13 @@ export function getBatteryData() {
   return request(url, 'post')
 }
 
-export function getBatteryDataByCity(city) {
+export function getBatteryDataByCity(city, uid, utype) {
   let url = '/cwld/smartBatteryAction/getBatteryDataByCity.action'
 
   let data = new URLSearchParams()
   data.append('city', city)
+  data.append('uid', uid)
+  data.append('utype', utype)
 
   return request(url, 'post', { 'Content-Type': 'application/x-www-form-urlencoded' }, data)
 }
@@ -163,6 +167,16 @@ export function getStoreOrderNumByParams(city, startTime, endTime) {
   }
 
   return request(url, 'post', null, null)
+}
+
+export function login(user, password) {
+  let url = '/cwld/salesRetreatAction/loginByCondition.action'
+
+  let data = new URLSearchParams()
+  data.append('name', user)
+  data.append('password', md5(password))
+
+  return request(url, 'post', { 'Content-Type': 'application/x-www-form-urlencoded' }, data)
 }
 
 let geoCoordMap = {

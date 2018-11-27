@@ -13,6 +13,14 @@ import router from './router'
 
 Vue.use(Element)
 
+Vue.prototype.$user = {}
+
+let user = localStorage.getItem('user')
+
+if (user) {
+  Object.assign(Vue.prototype.$user, JSON.parse(user))
+}
+
 Vue.config.productionTip = true
 
 new Vue({
