@@ -206,12 +206,7 @@ export default {
       }
 
       if (!this.password) {
-        this.$message({
-          message: '请输入密码.',
-          type: 'error'
-        })
-
-        return
+        this.password = ''
       }
 
       login(this.username, this.password).then(function(result) {

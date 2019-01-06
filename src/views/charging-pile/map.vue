@@ -6,16 +6,20 @@
         <div class="popup-title">{{ pile.name }}</div>
         <div class="popup-content">
             <div class="popup-content-item">
+                <div>充电</div>
+                <div class="popup-content-item-value">{{ cdJackNum }}&nbsp;</div>
+            </div>
+            <div class="popup-content-item">
+                <div>空闲</div>
+                <div class="popup-content-item-value">{{ kxJackNum }}&nbsp;</div>
+            </div>                      
+            <div class="popup-content-item">
                 <div>市电电压</div>
-                <div class="popup-content-item-value">{{ pile.sddy }}&nbsp;</div>
+                <div class="popup-content-item-value">{{ pile.sddy/100 }}<span style="font-size: 18px; margin-left: 5px">V</span></div>
             </div>
             <div class="popup-content-item">
                 <div>总电流</div>
-                <div class="popup-content-item-value">{{ pile.zdl }}&nbsp;</div>
-            </div>
-            <div class="popup-content-item">
-                <div>总充电量</div>
-                <div class="popup-content-item-value">{{ pile.zcdl }}&nbsp;</div>
+                <div class="popup-content-item-value">{{ pile.zdl/1000 }}<span style="font-size: 18px; margin-left: 5px">A</span></div>
             </div>
         </div>
         <div class="popup-content">
@@ -138,6 +142,30 @@ export default {
       let date = new Date()
       date.setTime(this.pile.jssj.time)
       return date.format('yyyy-MM-dd hh:mm:ss')
+    },
+    cdJackNum() {
+      let num = 0;
+      if(this.pile.details) {
+        this.pile.details.forEach(function(item) {
+          if(item && item.cdzt === 1) {
+            num++
+          }
+        });
+      }
+
+      return num;
+    },
+    kxJackNum() {
+      let num = 0;
+      if(this.pile.details) {
+        this.pile.details.forEach(function(item) {
+          if(item && item.cdzt === 0) {
+            num++
+          }
+        });
+      }
+
+      return num;
     }
   },
   watch: {},
@@ -222,12 +250,7 @@ export default {
       }
 
       if (!this.password) {
-        this.$message({
-          message: '请输入密码.',
-          type: 'error'
-        })
-
-        return
+        this.password = ''
       }
 
       login(this.username, this.password).then(function(result) {

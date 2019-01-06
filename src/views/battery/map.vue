@@ -3,10 +3,14 @@
     <div id="map-container"></div>
     <div class="popup" v-if="battery">
         <button type="button" class="icon-close" @click="closePopup">×</button>
-        <div class="popup-title">{{ battery.batchNo }}</div>
+        <div class="popup-title">
+          {{ battery.batchNo }}<span v-if="batteryStatus"> {{ batteryStatus }}</span>
+        </div>
         <div class="popup-subtitle">
             <div class="popup-subtitle-alarm" v-if="battery.alarmDetails && battery.alarmDetails[0]">{{ battery.alarmDetails[0].alarmName }}</div>
-            <div class="popup-subtitle-status" v-if="batteryStatus"> {{ batteryStatus }}</div>
+            <div class="popup-subtitle-info" v-if="battery.telephone"> {{ battery.telephone }}</div>
+            <div class="popup-subtitle-info" v-if="battery.receiver"> {{ battery.receiver }}</div>
+            <div class="popup-subtitle-info" v-if="battery.myName"> {{ battery.myName }}</div>
         </div>
         <div class="popup-content">
             <div class="popup-content-item"><span class="popup-content-item-value">{{ battery.soc }}</span>%<br>电量</div>
@@ -505,12 +509,7 @@ export default {
       }
 
       if (!this.password) {
-        this.$message({
-          message: '请输入密码.',
-          type: 'error'
-        })
-
-        return
+        this.password = ''
       }
 
       login(this.username, this.password).then(function(result) {
@@ -582,29 +581,26 @@ export default {
       }
     }
 
-    &-title {
+    &-title {    
       color: #fff;
       font-size: 20px;
       text-align: center;
       margin-top: 24px;
+
+      span {
+        text-align: center;
+        margin-left: 20px;
+        padding: 5px;
+        color: #fff;
+        font-size: 16px;
+        background: #2a8700;
+      }      
     }
 
     &-subtitle {
       display: flex;
       flex-direction: row-reverse;
       justify-content: center;
-
-      &-status {
-        color: #ffffff;
-        width: 42px;
-        height: 25px;
-        background: #2a8700;
-        float: right;
-        line-height: 25px;
-        text-align: center;
-        margin-top: 16px;
-        margin-right: 10px;
-      }
 
       &-alarm {
         color: #171717;
@@ -617,6 +613,17 @@ export default {
         margin-top: 16px;
         margin-right: 10px;
       }
+
+      &-info {
+        color: #fff;
+        width: auto;
+        height: 25px;
+        float: right;
+        line-height: 25px;
+        text-align: center;
+        margin-top: 16px;
+        margin-right: 10px;
+      }      
     }
 
     &-content {
