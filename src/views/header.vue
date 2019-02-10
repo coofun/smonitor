@@ -27,7 +27,7 @@ export default {
     currentCity: {
       type: String
     }
-  },
+  }, 
   computed: {
     homeTabClass() {
       return this.currentTab === 'Home' ? 'tab-item tab-item-selected' : 'tab-item'
@@ -40,8 +40,8 @@ export default {
     },
     mapLink() {
       return '/' + this.currentPage + '/map' + '/' + this.currentCity
-    }
-  },
+    }   
+  },  
   methods: {
     switchTab(tab) {
       this.$emit('switch-tab', tab)

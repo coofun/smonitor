@@ -22,6 +22,8 @@
             </ul>
         </div>
     </div>
+
+    <LoginUserBar style="position: absolute; left: 50px; top: 10px; z-index: 9999"></LoginUserBar>
 </div>
 </template>
 
@@ -33,6 +35,7 @@ import { debounce } from '@/utils'
 import { percentString } from '@/extends/math.js'
 
 import { getStoreNumByParams, getStoreCategoryByCity, getStoreOrderNumByParams, geoCoordMap } from '@/data'
+import LoginUserBar from '@/views/components/LoginUserBar.vue'
 
 const pie_placeholder = {
   value: 40,
@@ -52,6 +55,9 @@ const pie_itemStyle = {
 }
 
 export default {
+  components: {
+    LoginUserBar
+  },   
   data() {
     return {
       storeStatusStat: [],

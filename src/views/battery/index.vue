@@ -21,6 +21,8 @@
             </ul>
         </div>
     </div>
+
+    <LoginUserBar style="position: absolute; left: 50px; top: 10px; z-index: 9999"></LoginUserBar>
 </div>
 </template>
 
@@ -31,13 +33,15 @@ import ChartChinaMap from '@/components/charts/chart-china-map'
 import ChartRing from '@/components/charts/chart-ring'
 import ChartBar from '@/components/charts/chart-bar'
 import ChartLine from '@/components/charts/chart-line'
+import LoginUserBar from '@/views/components/LoginUserBar.vue'
 
 export default {
   components: {
     ChartChinaMap,
     ChartRing,
     ChartBar,
-    ChartLine
+    ChartLine,
+    LoginUserBar
   },
   data() {
     return {

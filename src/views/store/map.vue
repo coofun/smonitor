@@ -42,51 +42,25 @@
             </el-autocomplete>
         </div>
     </div>
-    <el-dialog :visible.sync="showLoginDialog" width="400px" center class="loginDialog">
-        <div class="title-container">
-          <h3 class="title">登录</h3>
-        </div>                        
-        <el-form class="login-form">
-          <el-form-item label="用户名">
-            <el-input type="text" v-model="username" placeholder="请输入用户名" />
-          </el-form-item>
-          <el-form-item label="密码">
-            <el-input type="password" v-model="password" placeholder="请输入密码" @keyup.enter.native="handleLogin" />
-          </el-form-item>
-        </el-form>
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="showLoginDialog = false">取消</el-button>
-          <el-button type="primary" @click="handleLogin">确认</el-button>
-        </span>
-    </el-dialog>
-    <div style="position: absolute; right: 50px; top: 5px; z-index: 9999">
-      <el-dropdown v-if="$user.name"  @command="handleCommand" style="color: #ffaf3d; font-size: 18px">
-        <span class="el-dropdown-link">
-          欢迎您，{{ $user.name }}<i class="el-icon-arrow-down el-icon--right"></i>
-        </span>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="logout">退出</el-dropdown-item>
-        </el-dropdown-menu>
-      </el-dropdown>
-      <el-button plain v-else @click="showLoginDialog=true" style="background-color: transparent; border-color: transparent; color: #ffaf3d; font-size: 18px">登录</el-button>
-    </div>      
+    <LoginUserBar style="position: absolute; left: 50px; top: 10px; z-index: 9999"></LoginUserBar>      
 </div>
 </template>
 
 <script>
 import { getStoreListByCondition, login } from '@/data'
+import LoginUserBar from '@/views/components/LoginUserBar.vue'
 
 export default {
+  components: {
+    LoginUserBar
+  },  
   data() {
     return {
       city: null,
       map: null,
       icon: null,
       markers: [],
-      store: null,
-      showLoginDialog: false,
-      username: null,
-      password: null         
+      store: null       
     }
   },
   created() {
@@ -193,44 +167,6 @@ export default {
         return item.store === store
       })
       this.map.panTo(marker.point)
-    },
-    handleLogin() {
-      let _this = this
-      if (!this.username) {
-        this.$message({
-          message: '请输入用户名.',
-          type: 'error'
-        })
-
-        return
-      }
-
-      if (!this.password) {
-        this.password = ''
-      }
-
-      login(this.username, this.password).then(function(result) {
-        if (result.id) {
-          Object.assign(_this.$user, result)
-          _this.showLoginDialog = false
-          localStorage.setItem('user', JSON.stringify(_this.$user))
-          _this.$message({
-            message: '登录成功.',
-            type: 'success'
-          })
-          this.getStoreListByCondition()          
-        } else {
-          _this.$message({
-            message: '登录失败，请重新登录.',
-            type: 'error'
-          })
-        }
-      })
-    },
-    handleCommand(command) {
-      this.$user = {}
-      localStorage.removeItem('user')
-      this.$forceUpdate()
     }     
   }
 }
@@ -311,19 +247,7 @@ export default {
       bottom: 25px;
       left: 100px;
     }
-  }
-
-  .loginDialog {
-    .title-container {
-      position: relative;
-      .title {
-        font-size: 26px;
-        margin: 0px auto 12px auto;
-        text-align: center;
-        font-weight: bold;
-      }
-    }
-  }  
+  } 
 }
 </style>
 <style>
