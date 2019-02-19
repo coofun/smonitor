@@ -49,8 +49,9 @@
                                 </el-date-picker>
                                 <el-time-picker v-model="trackDateStartTime" placeholder="开始时间" style="margin-left: 10px">
                                 </el-time-picker>
-                                <el-time-picker arrow-control v-model="trackDateEndTime" placeholder="结束时间" style="margin-left: 10px; margin-right: 50px">
-                                </el-time-picker>                                
+                                <el-time-picker arrow-control v-model="trackDateEndTime" placeholder="结束时间" style="margin-left: 10px; margin-right: 10px">
+                                </el-time-picker>
+                                <el-checkbox v-model="filterGpsPosition" style="font-size: 18px; color: #FFF; margin-right: 50px">过滤基站定位</el-checkbox>                               
                                 <el-button v-if="canPlay" @click="play">播放</el-button>
                                 <el-button v-if="canPause" @click="playPause">暂停</el-button>
                                 <el-button v-if="canContinue" @click="playContinue">播放</el-button>
@@ -104,7 +105,8 @@ export default {
       trackTask: null,
       trackStartIcon: new BMap.Icon('static/images/trace_start.png', new BMap.Size(40, 57)),
       trackEndIcon: new BMap.Icon('static/images/trace_end.png', new BMap.Size(40, 57)),
-      trackDistance: 0
+      trackDistance: 0,
+      filterGpsPosition: false
     }
   },
   created() {
@@ -382,7 +384,13 @@ export default {
 
       getBatteryTrackByParams(this.battery.zdid, this.trackTimeZone.startTime, this.trackTimeZone.endTime).then(result => {
         result.forEach(item => {
-          this.trackPoints.push(item)
+          if(this.filterGpsPosition) {
+            if(item.mode === '1') {
+              this.trackPoints.push(item)
+            }
+          } else {
+            this.trackPoints.push(item)
+          }
         })
         this.playStart()
       })

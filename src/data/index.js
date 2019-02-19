@@ -60,6 +60,18 @@ export function getBatteryAlarmNumByParams(city, startTime, endTime) {
   return request(url, 'post', null, null)
 }
 
+export function getBatteryAlarmNumBySpec() {
+  let url = '/cwld/smartBatteryAction/getBatteryAlarmNumBySpec.action'
+
+  return request(url, 'post', null, null)
+}
+
+export function getBatteryAlarmListByParams(spec, start, limit) {
+  let url = '/cwld/smartBatteryAction/getBatteryAlarmListByParams.action?specification=' + spec + "&limit=" + limit + "&start=" + start 
+
+  return request(url, 'post', null, null)
+}
+
 export function getChargingPileNumByCity(city) {
   let url = '/cwld/mainDisplayAction/getChargingPileNumByCity.action'
 
