@@ -152,24 +152,10 @@ export default {
           points.push(point)
         })
 
-        // 批量转换GPS坐标
-        _this.translateCoord(points)
+        _this.addMarkers(points)
       })
     },
-    translateCoord(points) {
-      let _this = this
-
-      // 批量转换GPS坐标，每次最多转换10个
-      while (points && points.length > 0) {
-        let tot = points.splice(0, 10)
-        if (tot && tot.length > 0) {
-          _this.converter.translate(tot, 1, 5, function(data) {
-            _this.addMarkers(data.points, tot)
-          })
-        }
-      }
-    },
-    addMarkers(points, origin) {
+    addMarkers(points) {
       let _this = this
 
       if (!(points && points.length > 0)) {
@@ -180,7 +166,7 @@ export default {
         let marker = new BMap.Marker(points[i], {
           icon: _this.icon
         })
-        marker.pile = origin[i].pile
+        marker.pile = points[i].pile
         marker.addEventListener('click', _this.onMarkerClick)
         _this.map.addOverlay(marker)
         _this.markers.push(marker)
