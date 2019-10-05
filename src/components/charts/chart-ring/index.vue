@@ -7,15 +7,7 @@
 import echarts from 'echarts'
 import { percentString } from '@/extends/math.js'
 import { getBatteryStatusByParams } from '@/data'
-const placeholder = {
-  value: 40,
-  itemStyle: {
-    normal: {
-      color: 'transparent',
-      borderColor: 'transparent'
-    }
-  }
-}
+
 export default {
   data() {
     return {
@@ -60,6 +52,15 @@ export default {
   },
   computed: {
     dataFormatted() {
+      let placeholder = {
+        value: this.data.total / 50 + 1,
+        itemStyle: {
+          normal: {
+            color: 'transparent',
+            borderColor: 'transparent'
+          }
+        }
+      }      
       let data = []
       data.push(
         {

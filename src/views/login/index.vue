@@ -95,5 +95,10 @@ export default {
             }
         }
     }
+
+    .el-button--primary {
+        background-color: #d6b469;
+        border-color: #d6b469;
+    }
 }
 </style>

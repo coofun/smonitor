@@ -132,6 +132,53 @@ export function getChargingOrderNumByParams(city, startTime, endTime) {
   return request(url, 'post', { 'Content-Type': 'application/x-www-form-urlencoded' }, data)
 }
 
+export function getChangeCabinetByCity(city, condition) {
+  let url = '/cwld/mainDisplayAction/getChangeCabinetByCity.action'
+
+  let data = null
+
+  if (city || condition) {
+    data = new URLSearchParams()
+
+    if (city) {
+      data.append('city', city)
+    }
+
+    if (condition) {
+      data.append('condition', condition)
+    }
+  }
+
+  return request(url, 'post', { 'Content-Type': 'application/x-www-form-urlencoded' }, data)
+}
+
+export function getChangeCabinetStatusByCity(city) {
+  let url = '/cwld/mainDisplayAction/getChangeCabinetStatusByCity.action'
+
+  let data = null
+
+  if (city) {
+    data = new URLSearchParams()
+    data.append('city', city)
+  }
+
+  return request(url, 'post', { 'Content-Type': 'application/x-www-form-urlencoded' }, data)
+}
+
+export function getChangeOrderNumByParams(city, startTime, endTime) {
+  let url = '/cwld/mainDisplayAction/getChangeOrderNumByParams.action'
+
+  let data = new URLSearchParams()
+  if (city) {
+    data.append('city', city)
+  }
+
+  data.append('startTime', startTime)
+  data.append('endTime', endTime)
+
+  return request(url, 'post', { 'Content-Type': 'application/x-www-form-urlencoded' }, data)
+}
+
 export function getStoreListByCondition(city, condition) {
   let url = '/cwld/mainDisplayAction/getStoreListByCondition.action'
 

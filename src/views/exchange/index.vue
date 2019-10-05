@@ -4,17 +4,17 @@
     <div class="statistics-wrapper">
         <div id="chart-pie" class="chart-pie">
         </div>
-        <div class="statistics-item-title">门店类型统计</div>
+        <div class="statistics-item-title">换电柜状态统计</div>
         <div id="chart-bar" class="chart-bar"></div>
-        <div class="statistics-item-title">门店数量统计</div>
+        <div class="statistics-item-title">换电柜数量统计</div>
         <div id="chart-line" class="chart-line"></div>
-        <div class="statistics-item-title">订单数量统计</div>
+        <div class="statistics-item-title">换电记录数量统计</div>
     </div>
     <div class="right_menu">
         <div class="right_menu_tit"></div>
         <div class="diquliebiao">
             <ul>
-                <router-link v-for="city in cities" :key="city" :to="'/store/map/' + city">
+                <router-link v-for="city in cities" :key="city" :to="'/charging-pile/map/' + city">
                     <li>
                         <img src="@/assets/images/yuan.png">{{city}}
                     </li>
@@ -34,7 +34,7 @@ import 'echarts/map/js/china-contour.js'
 import { debounce } from '@/utils'
 import { percentString } from '@/extends/math.js'
 
-import { getStoreNumByParams, getStoreCategoryByCity, getStoreOrderNumByParams, geoCoordMap } from '@/data'
+import { getChangeCabinetStatusByCity, geoCoordMap, getChangeOrderNumByParams } from '@/data'
 import LoginUserBar from '@/views/components/LoginUserBar.vue'
 
 const pie_itemStyle = {
@@ -42,15 +42,15 @@ const pie_itemStyle = {
     borderWidth: 5,
     borderColor: '#D6B469'
   }
-}
+} 
 
 export default {
   components: {
     LoginUserBar
-  },   
+  },  
   data() {
     return {
-      storeStatusStat: [],
+      cabinetStatusStat: [],
       chartChinaMapHoverIndex: 0
     }
   },
@@ -58,7 +58,7 @@ export default {
     // 计算城市列表
     cities() {
       let cities = []
-      this.storeStatusStat.forEach(function(item) {
+      this.cabinetStatusStat.forEach(function(item) {
         cities.push(item.city)
       })
       return cities
@@ -154,31 +154,138 @@ export default {
                             <div class="baojingjibie"></div>
                             <div class="dianchizhuangtai"></div>
                             <div class="map_popup_content">
-                                <div class="map_popup_content_item">销售门店<br/>${params.data.xsNum}</div>
-                                <div class="map_popup_content_item">租赁门店<br/>${params.data.zlNum}</div>
-                                <div class="map_popup_content_item">售转退门店<br/>${params.data.sztNum}</div>
+                                <div class="map_popup_content_item">充电<br/>${params.data.cdNum}</div>
+                                <div class="map_popup_content_item">可用<br/>${params.data.kyNum}</div>
+                                <div class="map_popup_content_item">故障<br/>${params.data.gzNum}</div>
+                                <div class="map_popup_content_item">空仓<br/>${params.data.kcNum}</div>
                             </div>
                         </div>`
               }
             },
-            data: this.storeStatusStat
+            data: this.cabinetStatusStat
           }
         ]
       }
     },
+    chartPieOption() {
+      return {
+        backgroundColor: 'transparent',
+        series: [
+          {
+            type: 'pie',
+            radius: [95, 100],
+            hoverAnimation: false,
+            data: this.chartPieData
+          }
+        ]
+      }      
+    },
+    chartPieData() {
+      let data = []
+
+      if(this.cabinetStatusStat.length === 0){
+        return data
+      }
+
+      let total = 0, cdNum = 0, kyNum = 0, gzNum = 0, kcNum = 0
+
+      this.cabinetStatusStat.forEach(function(item){
+        total += item.cdNum + item.kyNum + item.gzNum + item.kcNum
+        cdNum += item.cdNum
+        kyNum += item.kyNum
+        gzNum += item.gzNum
+        kcNum += item.kcNum
+      })
+
+      let pie_placeholder = {
+        value: total / 50 + 1,
+        itemStyle: {
+          normal: {
+            color: 'transparent',
+            borderColor: 'transparent'
+          }
+        }
+      }
+
+      data.push(
+        {
+          name: '充电数量 ： ' + cdNum + ' （ ' + percentString(cdNum, total) + ' )',
+          value: cdNum,
+          itemStyle: pie_itemStyle,
+          label: {
+            color: '#fff'
+          },
+          labelLine: {
+            lineStyle: {
+              color: '#D6B469'
+            }
+          }
+        },
+        pie_placeholder
+      )      
+
+      data.push(
+        {
+          name: '可用数量 ： ' + kyNum + ' （ ' + percentString(kyNum, total) + ' )',
+          value: kyNum,
+          itemStyle: pie_itemStyle,
+          label: {
+            color: '#fff'
+          },
+          labelLine: {
+            lineStyle: {
+              color: '#D6B469'
+            }
+          }
+        },
+        pie_placeholder
+      )
+
+      data.push(
+        {
+          name: '故障数量 ： ' + gzNum + ' （ ' + percentString(gzNum, total) + ' )',
+          value: gzNum,
+          itemStyle: pie_itemStyle,
+          label: {
+            color: '#fff'
+          },
+          labelLine: {
+            lineStyle: {
+              color: '#D6B469'
+            }
+          }
+        },
+        pie_placeholder
+      )
+
+      data.push(
+        {
+          name: '空仓数量 ： ' + kcNum + ' （ ' + percentString(kcNum, total) + ' )',
+          value: kcNum,
+          itemStyle: pie_itemStyle,
+          label: {
+            color: '#fff'
+          },
+          labelLine: {
+            lineStyle: {
+              color: '#D6B469'
+            }
+          }
+        },
+        pie_placeholder
+      )
+
+      return data
+    },
     chartBarOption() {
       let xData = []
       let yData = []
-      if (this.storeStatusStat) {
-        this.storeStatusStat.forEach(function(item) {
+      if (this.cabinetStatusStat) {
+        this.cabinetStatusStat.forEach(function(item){
           xData.push(item.city)
         })
         xData.forEach(item => {
-          yData.push(
-            this.storeStatusStat.find(pile => {
-              return pile.city === item
-            }).total
-          )
+          yData.push(this.cabinetStatusStat.find(pile => { return pile.city === item }).total)          
         })
       }
       return {
@@ -215,53 +322,49 @@ export default {
           barWidth: 19.6,
           data: yData
         }
-      }
+      }      
     }
   },
   mounted() {
     let _this = this
 
-    // 初始化充电设备状态饼图
+    // 初始化换电柜状态饼图
     _this.chartPie = echarts.init(document.getElementById('chart-pie'))
 
-    // 初始化充电设备按地市统计数量柱状图
+    // 初始化换电柜按地市统计数量柱状图
     this.chartBar = echarts.init(document.getElementById('chart-bar'))
 
-    // 初始化订单数量统计折线图
+    // 初始化换电柜统计折线图
     this.chartLine = echarts.init(document.getElementById('chart-line'))
 
-    // 查询城市门店统计信息
-    getStoreNumByParams().then(result => {
+    // 查询换电柜状态统计信息
+    getChangeCabinetStatusByCity().then(result => {
       if (result) {
-        _this.storeStatusStat.splice(0, _this.storeStatusStat.length)
-        _this.storeStatusStat.push(...result)
+        _this.cabinetStatusStat.splice(0, _this.cabinetStatusStat.length)
+        _this.cabinetStatusStat.push(...result)
 
-        _this.storeStatusStat.forEach(function(item) {
+        _this.cabinetStatusStat.forEach(function(item) {
           if (!item.city) {
-            _this.storeStatusStat.splice(_this.storeStatusStat.indexOf(item), 1)
+            _this.cabinetStatusStat.splice(_this.cabinetStatusStat.indexOf(item), 1)
           } else {
             item.value = geoCoordMap[_this.getCityName(item.city)]
           }
         })
 
-        _this.storeStatusStat.sort(function(a, b) {
+        _this.cabinetStatusStat.sort(function(a, b) {
           return b.total - a.total
         })
 
-        _this.$emit('init-city', _this.storeStatusStat[0] ? _this.storeStatusStat[0].city : '')
+        _this.$emit('init-city', _this.cabinetStatusStat[0] ? _this.cabinetStatusStat[0].city : '')
 
         _this.initChartChinaMap()
+
+        _this.chartPie.setOption(_this.chartPieOption)
 
         _this.chartBar.setOption(_this.chartBarOption)
       }
     })
 
-    // 所有门店状态汇总统计
-    getStoreCategoryByCity().then(result => {
-      if(result) {
-        _this.setChartPieOption(result[0])
-      }
-    })
     // 查询最近七天的订单数量
     _this.getRecent7DaysData()
 
@@ -291,7 +394,7 @@ export default {
         return
       }
 
-      if (_this.chartChinaMapHoverIndex > _this.storeStatusStat.length) {
+      if (_this.chartChinaMapHoverIndex > _this.cabinetStatusStat.length) {
         _this.chartChinaMapHoverIndex = 0
       }
 
@@ -310,96 +413,14 @@ export default {
       let yData = []
       let startTime = new Date().getSomeDay(-6).format('yyyy-MM-dd 00:00:00')
       let endTime = new Date().format('yyyy-MM-dd 23:59:59')
-      getStoreOrderNumByParams(null, startTime, endTime)
-        .then(result => {
-          result.forEach(item => {
-            xData.push(item.dateTime)
-            yData.push(item.total)
-          })
-          this.setChartLineOption(xData, yData)
+      getChangeOrderNumByParams(null, startTime, endTime).then(result => {
+        result.forEach(item => {
+          xData.push(item.dateTime)
+          yData.push(item.total)
         })
-        .catch(function(error) {
-          console.log(error)
-        })
-    },
-    setChartPieOption(data) {
-      if (!this.chartPie || !data) {
-        return
-      }
-
-      let total = data.total, xsNum = data.xsNum, zlNum = data.zlNum, sztNum = data.sztNum
-
-      let pie_placeholder = {
-        value: total / 50 + 1,
-        itemStyle: {
-          normal: {
-            color: 'transparent',
-            borderColor: 'transparent'
-          }
-        }
-      }
-
-      let chartPieData = []
-
-      chartPieData.push(
-        {
-          name: '销售门店数量 ： ' + xsNum + ' （ ' + percentString(xsNum, total) + ' )',
-          value: xsNum,
-          itemStyle: pie_itemStyle,
-          label: {
-            color: '#fff'
-          },
-          labelLine: {
-            lineStyle: {
-              color: '#D6B469'
-            }
-          }
-        },
-        pie_placeholder
-      )
-      chartPieData.push(
-        {
-          name: '租赁门店数量 ： ' + zlNum + ' （ ' + percentString(zlNum, total) + ' )',
-          value: zlNum,
-          itemStyle: pie_itemStyle,
-          label: {
-            color: '#fff'
-          },
-          labelLine: {
-            lineStyle: {
-              color: '#D6B469'
-            }
-          }
-        },
-        pie_placeholder
-      )
-      chartPieData.push(
-        {
-          name: '售转退门店数量 ： ' + sztNum + ' （ ' + percentString(sztNum, total) + ' )',
-          value: sztNum,
-          itemStyle: pie_itemStyle,
-          label: {
-            color: '#fff'
-          },
-          labelLine: {
-            lineStyle: {
-              color: '#D6B469'
-            }
-          }
-        },
-        pie_placeholder
-      )
-
-      this.chartPie.setOption({
-        backgroundColor: 'transparent',
-        series: [
-          {
-            type: 'pie',
-            radius: [95, 100],
-            hoverAnimation: false,
-            data: chartPieData
-          }
-        ]
+        this.setChartLineOption(xData, yData)
+      }).catch(function(error) {
+        console.log(error)
       })
     },
     setChartLineOption(xData, yData) {
@@ -441,7 +462,7 @@ export default {
             itemStyle: {
               normal: {
                 color: '#D6B469',
-                label : {
+                label: {
                   show: true
                 }
               }
@@ -503,11 +524,11 @@ export default {
 
     .chart-bar {
       height: 200px;
-    }
+    }    
 
     .chart-line {
       height: 200px;
-    }
+    }    
   }
 
   .right_menu {

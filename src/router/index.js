@@ -42,6 +42,20 @@ const router =  new Router({
       }
     },
     {
+      path: '/exchange',
+      component: () => import('@/views/exchange/index.vue'),
+      meta: {
+        requireLogin: true
+      }
+    },
+    {
+      path: '/exchange/map/:city',
+      component: () => import('@/views/exchange/map.vue'),
+      meta: {
+        requireLogin: true
+      }
+    },    
+    {
       path: '/store',
       component: () => import('@/views/store/index.vue'),
       meta: {

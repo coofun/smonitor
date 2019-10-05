@@ -37,16 +37,6 @@ import { percentString } from '@/extends/math.js'
 import { getChargingPileStatusByCity, geoCoordMap, getChargingOrderNumByParams } from '@/data'
 import LoginUserBar from '@/views/components/LoginUserBar.vue'
 
-const pie_placeholder = {
-  value: 40,
-  itemStyle: {
-    normal: {
-      color: 'transparent',
-      borderColor: 'transparent'
-    }
-  }
-}
-
 const pie_itemStyle = {
   normal: {
     borderWidth: 5,
@@ -204,6 +194,16 @@ export default {
         cdNum += item.cdNum
         gzNum += item.gzNum
       })
+
+      let pie_placeholder = {
+        value: total / 50 + 1,
+        itemStyle: {
+          normal: {
+            color: 'transparent',
+            borderColor: 'transparent'
+          }
+        }
+      }
 
       data.push(
         {
