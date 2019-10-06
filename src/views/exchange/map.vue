@@ -116,7 +116,7 @@ export default {
       let num = 0;
       if(this.cabinet.details) {
         this.cabinet.details.forEach(function(item) {
-          if(item && item.zdzt === 0) {
+          if(item && item.cmzt === 1 && item.zdzt === 2) {
             num++
           }
         });
@@ -128,7 +128,7 @@ export default {
       let num = 0;
       if(this.cabinet.details) {
         this.cabinet.details.forEach(function(item) {
-          if(item && item.zdzt === 1) {
+          if(item && item.cmzt === 1 &&  item.zdzt === 1) {
             num++
           }
         });
