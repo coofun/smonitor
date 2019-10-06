@@ -14,7 +14,7 @@
         <div class="right_menu_tit"></div>
         <div class="diquliebiao">
             <ul>
-                <router-link v-for="city in cities" :key="city" :to="'/charging-pile/map/' + city">
+                <router-link v-for="city in cities" :key="city" :to="'/exchange/map/' + city">
                     <li>
                         <img src="@/assets/images/yuan.png">{{city}}
                     </li>
