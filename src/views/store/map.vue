@@ -124,9 +124,7 @@ export default {
       while (points && points.length > 0) {
         let tot = points.splice(0, 10)
         if (tot && tot.length > 0) {
-          _this.converter.translate(tot, 1, 5, function(data) {
-            _this.addMarkers(data.points, tot)
-          })
+          _this.addMarkers(tot, tot)
         }
       }
     },
